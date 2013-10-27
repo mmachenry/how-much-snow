@@ -7,11 +7,14 @@ directory = "/Users/mmachenry/howmuchsnow"
 program = directory + "/wgrib2-v0.1.9.4/bin/wgrib2"
 
 def howMuchSnowIPv4 (ip_address):
+    return howMuchSnowGPS (IPv4toGPS (ip_address))
+
+def IPv4toGPS (ip_address):
     gi = pygeoip.GeoIP('GeoLiteCity.dat')
     record = gi.record_by_addr(ip_address)
-    return howMuchSnowGPS (record['latitude'], record['longitude'])
+    return record['latitude'], record['longitude']
 
-def howMuchSnowGPS (lat, lon):
+def howMuchSnowGPS ((lat, lon)):
     '''Takes user's latitude and longitude. Returns amount of snow in inches.'''
     amts_snow = [howMuchSnowOneFile(lat, lon, f) for f in glob(directory + '/data/*grb')]
     return metersToInches(max(amts_snow))
@@ -31,5 +34,5 @@ def test_howMuchSnowOneFile():
     howMuchSnowOneFile(40, 200, directory + '/data/sref_xwwd_us_2013102609f45.grb')
 
 print howMuchSnowIPv4('209.6.55.158')
-print howMuchSnowGPS(45.95, -107.9)
+print howMuchSnowGPS((45.95, -107.9))
 
