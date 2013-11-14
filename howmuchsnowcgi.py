@@ -5,17 +5,9 @@ sys.path.append('/home/mmachenry/HowMuchSnow')
 import howmuchsnow
 
 def application(environ, start_response):
-    ip_addr = '209.6.55.158' #environ['REMOTE_ADDR']
-    response_body = make_html_page(howmuchsnow.how_much_snow_ipv4(ip_addr))
-
-    status = '200 OK'
-    response_headers = [
-        ('Content-Type', 'text/html'),
-        ('Content-Length', str(len(response_body)))
-    ]
-    start_response(status, response_headers)
-
-    return [response_body]
+    start_response('200 OK', [('Content-Type', 'text/html')])
+    response_body = make_html_page(howmuchsnow.how_much_snow_ipv4(environ['REMOTE_ADDR']))
+    yield response_body
 
 def make_html_page (inches):
     return """
