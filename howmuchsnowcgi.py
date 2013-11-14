@@ -1,9 +1,11 @@
+#!/usr/bin/env python2.7
 import sys
+from flup.server.fcgi import WSGIServer
 sys.path.append('/home/mmachenry/HowMuchSnow')
 import howmuchsnow
 
 def application(environ, start_response):
-    ip_addr = environ['REMOTE_ADDR']
+    ip_addr = '209.6.55.158' #environ['REMOTE_ADDR']
     response_body = make_html_page(howmuchsnow.how_much_snow_ipv4(ip_addr))
 
     status = '200 OK'
@@ -35,3 +37,6 @@ def make_html_page (inches):
 	</body>
 	</html>
     """
+
+WSGIServer(application).run()
+
