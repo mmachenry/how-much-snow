@@ -1,6 +1,6 @@
-import time
 import os
 import glob
+import re
 from ftplib import FTP
 
 WEATHER_DATA = '/home/mmachenry/public_html/HowMuchSnow/weather_data'
@@ -15,12 +15,12 @@ for filename in glob.glob(os.path.join(WEATHER_DATA, "*.grb")):
 
 # Get a list of all the new files.
 ftp.cwd('winwx_impact')
-ftp.cwd(time.strftime("%Y%m%d"))
-filenames = []
-ftp.retrlines('NLST', filenames.append)
+latestDirectory = max(filter(lambda dir: re.match("^[0-9]+$", dir), ftp.nlst()))
+print latestDirectory
+ftp.cwd(latestDirectory)
 
 # Download all the new files.
-for filename in filenames:
+for filename in ftp.nlst():
     extension = os.path.splitext(filename)[1]
     if extension == ".grb":
         local_filename = os.path.join(WEATHER_DATA, filename)
