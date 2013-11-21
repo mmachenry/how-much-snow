@@ -3,9 +3,9 @@ import re
 from glob import glob
 import pygeoip
 
-WEATHER_DIRECTORY = "/home/mmachenry/HowMuchSnow/weather_data"
+WEATHER_DIRECTORY = "/home/mmachenry/public_html/HowMuchSnow/weather_data"
 WGRIB_PROGRAM = "/home/mmachenry/wgrib2-v0.1.9.4/bin/wgrib2"
-GEOIP_DATABASE = "/home/mmachenry/HowMuchSnow/GeoLiteCity.dat"
+GEOIP_DATABASE = "/usr/share/GeoIP/GeoLiteCity.dat"
 
 def how_much_snow_ipv4 (ip_address):
     return how_much_snow_gps (ipv4_to_gps (ip_address))
