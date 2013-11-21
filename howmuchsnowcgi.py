@@ -10,6 +10,7 @@ def application(environ, start_response):
     yield response_body
 
 def make_html_page (inches):
+    reported_value = int(round(inches))
     return """
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml">
@@ -22,13 +23,19 @@ def make_html_page (inches):
 
 	<a style="font-weight: bold; font-size: 120pt; font-family: 
 	Arial, sans-serif; text-decoration: none; color: black;">
-	""" + str(int(round(inches))) + """ inches
+	""" + str(reported_value) + " " + unit_word(reported_value) + """
 	</a>
 
 
 	</body>
 	</html>
     """
+
+def unit_word (inches):
+    if inches == 1:
+        return "inch"
+    else:
+        return "inches"
 
 WSGIServer(application).run()
 
