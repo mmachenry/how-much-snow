@@ -1,18 +1,15 @@
 #!/usr/bin/env python2.7
 import sys
-from flup.server.fcgi import WSGIServer
+#from flup.server.fcgi import WSGIServer
+from webapp2 import WSGIApplication, RequestHandler
 sys.path.append('/home/mmachenry/HowMuchSnow')
 from howmuchsnow import how_much_snow_ipv4
 from model import get_persistent
 
+#TODO figure out how to refresh data
+persistent = get_persistent()
 
-def application(environ, start_response):
-    start_response('200 OK', [('Content-Type', 'text/html')])
-    response_body = make_html_page(how_much_snow_ipv4(environ['REMOTE_ADDR'], persistent))
-    yield response_body
-
-def make_html_page (inches):
-    reported_value = int(round(inches))
+def make_homepage(value, unit):
     return """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -23,16 +20,32 @@ def make_html_page (inches):
 
 <body style="text-align: center; padding-top: 200px;">
 
-<a title = "Maximum predicted accumulation of snow on the ground
-over the next 87 hours (about 3 and a half days)."
-style="font-weight: bold; font-size: 120pt; font-family:
-Arial, sans-serif; text-decoration: none; color: black;">
-""" + str(reported_value) + " " + unit_word(reported_value) + """
+<a style="font-weight: bold; font-size: 120pt; font-family:
+Helvetica, sans-serif; text-decoration: none; color: black;">
+%(value)s %(unit)s
 </a>
+
+<a href="/faq.html" style="font-size: 14pt; color: grey; font-family: Helvetica;">?</a>
 
 </body>
 </html>
     """
+
+faq = """
+"""
+
+class MainHandler (RequestHandler):
+    def get(self):
+        ipv4 = self.request.environ['REMOTE_ADDR']
+        inches = how_much_snow_ipv4(ipv4, persistent)
+        reported_value = int(round(inches))
+        unit = unit_word(reported_value)
+        homepage = make_homepage(str(reported_value), unit)
+        return self.response.write(homepage)
+
+class FAQHandler (RequestHandler):
+    def get(self):
+        return self.response.write(faq)
 
 def unit_word (inches):
     if inches == 1:
@@ -40,6 +53,12 @@ def unit_word (inches):
     else:
         return "inches"
 
-persistent = get_persistent()
-WSGIServer(application).run()
+
+app = WSGIApplication([('/', MainHandler),
+                       ('/faq', FAQHandler)],
+                      debug=True)
+
+
+if __name__ == '__main__':
+    app.run()
 
