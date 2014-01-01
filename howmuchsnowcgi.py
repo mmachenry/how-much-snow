@@ -22,7 +22,7 @@ def make_html_page (inches):
 	<body style="text-align: center; padding-top: 200px;">
 
 	<a style="font-weight: bold; font-size: 120pt; font-family: 
-	Arial, sans-serif; text-decoration: none; color: black;">
+	Helvetica, sans-serif; text-decoration: none; color: black;">
 	""" + str(reported_value) + " " + unit_word(reported_value) + """
 	</a>
 
