@@ -25,8 +25,12 @@ def how_much_snow_one_file (lat, lon, filename):
     command = [WGRIB_PROGRAM, "-lon", str(lon), str(lat), filename]
     output = check_output(command)
     snow_line = re.match(r'(?m)^1.*?val=([0-9.]+)$', output) 
-    amt_snow = snow_line.group(1) 
-    return float(amt_snow)
+    if snow_line:
+        amt_snow = snow_line.group(1) 
+        return float(amt_snow)
+    else:
+        return 0
+        
 
 def meters2inches (m):
     return m * 39.37
