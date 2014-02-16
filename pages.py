@@ -1,4 +1,4 @@
-def make_homepage(value, unit):
+def make_homepage (amount):
     return """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -9,23 +9,15 @@ def make_homepage(value, unit):
 
 <body style="text-align: center; padding-top: 200px;">
 
-<span id="snow" style="font-weight: bold; font-size: 120pt; font-family:
+<a style="font-weight: bold; font-size: 120pt; font-family:
 Helvetica, sans-serif; text-decoration: none; color: black;">
 %(amount)s
-</span>
+</a>
 
-<a href="/faq.html" style="font-size: 14pt; color: grey; font-family: Helvetica;">?</a>
 
-<script src="jquery.js"></script>
-<script src="geoPosition.js"></script>
-<script src="howmuchsnow.js"></script>
-
-Assuming you're near <a href="https://www.google.com/maps?q=%(lat)s%2C%(lon)s">%(lat)s°%(NS)s %(lon)s°%(EW)s</a> •
-Counts only snow falling after %(time)s •
-<a href="/faq.html">More information</a>
 </body>
 </html>
-    """
+"""
 
 faq = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

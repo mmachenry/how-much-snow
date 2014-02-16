@@ -7,9 +7,8 @@ from model import get_triangle_predictions, get_nearest
 
 GEOIP_DATABASE = "/usr/share/GeoIP/GeoLiteCity.dat"
 
-def how_much_snow_ipv4 (ip_address, persistent):
-    #return interpolate_triangle(ipv4_to_gps (ip_address), persistent)
-    return how_much_snow_gps (ipv4_to_gps (ip_address), persistent)
+def how_much_snow_ipv4 (ip_address):
+    return how_much_snow_gps (ipv4_to_gps (ip_address))
 
 def ipv4_to_gps (ip_address):
     '''Takes IP address and returns latitude and longitude of the nearest city.'''
