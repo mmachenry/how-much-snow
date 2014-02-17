@@ -24,13 +24,13 @@ def how_much_snow_one_file (lat, lon, filename):
     '''Takes user's latitude and longitude and the forecast file for one three-hour window. Returns max amount of snow.'''
     command = [WGRIB_PROGRAM, "-lon", str(lon), str(lat), filename]
     output = check_output(command)
-    snow_line = re.match(r'(?m)^1.*?val=([0-9.]+)$', output) 
+    snow_line = re.match(r'(?m)^1.*?val=([0-9.]+)$', output)
     if snow_line:
-        amt_snow = snow_line.group(1) 
+        amt_snow = snow_line.group(1)
         return float(amt_snow)
     else:
         return 0
-        
+
 
 def meters2inches (m):
     return m * 39.37

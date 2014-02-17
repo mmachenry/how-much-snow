@@ -1,35 +1,25 @@
 #!/usr/bin/env python2.7
 import sys
-from flup.server.fcgi import WSGIServer
 sys.path.append('/home/mmachenry/HowMuchSnow')
+from flask import Flask, request
+from flup.server.fcgi import WSGIServer
 import howmuchsnow
+import pages
 
-def application(environ, start_response):
-    start_response('200 OK', [('Content-Type', 'text/html')])
-    response_body = make_html_page(howmuchsnow.how_much_snow_ipv4(environ['REMOTE_ADDR']))
-    yield response_body
+app = Flask(__name__)
 
-def make_html_page (inches):
-    reported_value = int(round(inches))
-    return """
-	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-	<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-	  <title>How Much Snow Am I Going To Get?</title>
-	  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	</head>
+@app.route("/")
+def index():
+    ip_addr = request.environ['REMOTE_ADDR']
+    inches = howmuchsnow.how_much_snow_ipv4(ip_addr)
+    amount = format_amount(inches)
+    amount = '1'
+    homepage = pages.make_homepage(amount)
+    return homepage
 
-	<body style="text-align: center; padding-top: 200px;">
-
-	<a style="font-weight: bold; font-size: 120pt; font-family: 
-	Helvetica, sans-serif; text-decoration: none; color: black;">
-	""" + str(reported_value) + " " + unit_word(reported_value) + """
-	</a>
-
-
-	</body>
-	</html>
-    """
+@app.route("/faq")
+def faqpage():
+    return pages.faq
 
 def unit_word (inches):
     if inches == 1:
@@ -37,5 +27,10 @@ def unit_word (inches):
     else:
         return "inches"
 
-WSGIServer(application).run()
+def format_amount(inches):
+    reported_value = int(round(inches))
+    unit = unit_word(reported_value)
+    return str(reported_value) + ' ' + unit
 
+if __name__ == '__main__':
+    WSGIServer(app).run()
