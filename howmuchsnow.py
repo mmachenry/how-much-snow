@@ -1,3 +1,6 @@
+from subprocess import check_output
+import re
+from glob import glob
 import pygeoip
 import numpy as np
 from itertools import groupby
@@ -32,21 +35,17 @@ def how_much_snow_gps (user_loc, persistent):
     amounts = [interpolate_closest(hour, user_loc) for hour in hours]
     return max(amounts)
 
-def interpolate_closest (coordinates, lat, lon):
-    '''Takes a list of 3 points in 3D space and the x and y coordinates of
-    another point. Defines a plane over the points. Returns the z coordinate of
-    the last point. The 3 coordinates do not have to surround the other point.'''
-    try:
-        assert len(coordinates) == 3
-    except AssertionError:
+def how_much_snow_one_file (lat, lon, filename):
+    '''Takes user's latitude and longitude and the forecast file for one three-hour window. Returns max amount of snow.'''
+    command = [WGRIB_PROGRAM, "-lon", str(lon), str(lat), filename]
+    output = check_output(command)
+    snow_line = re.match(r'(?m)^1.*?val=([0-9.]+)$', output) 
+    if snow_line:
+        amt_snow = snow_line.group(1) 
+        return float(amt_snow)
+    else:
         return 0
-    vector1, vector2 = coordinates[0][:3] - coordinates[1][:3], coordinates[2][:3] - coordinates[1][:3]
-    normal = np.cross(vector1, vector2)
-    # plane equation is ax + by + cz = d
-    a, b, c = normal
-    d = np.dot(coordinates[0], normal)
-    # z = (ax + by - d) / -c
-    return np.dot([a, b, -d], [lat, lon, 1]) / -c
+        
 
 def get_triangle(user_lat, user_lon, triangulation):
     #TODO can I do this by point id somehow?
