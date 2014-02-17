@@ -1,21 +1,25 @@
 #!/usr/bin/env python2.7
 import sys
-from webapp2 import WSGIApplication, RequestHandler
 sys.path.append('/home/mmachenry/HowMuchSnow')
+from flask import Flask, request
+from flup.server.fcgi import WSGIServer
 import howmuchsnow
 import pages
 
-class MainHandler (RequestHandler):
-    def get(self):
-        ip_addr = self.request.environ['REMOTE_ADDR']
-        inches = howmuchsnow.how_much_snow_ipv4(ip_addr)
-        amount = format_amount(inches)
-        homepage = pages.make_homepage(amount)
-        return self.response.write(homepage)
+app = Flask(__name__)
 
-class FAQHandler (RequestHandler):
-    def get(self):
-        return self.response.write(pages.faq)
+@app.route("/")
+def index():
+    ip_addr = request.environ['REMOTE_ADDR']
+    inches = howmuchsnow.how_much_snow_ipv4(ip_addr)
+    amount = format_amount(inches)
+    amount = '1'
+    homepage = pages.make_homepage(amount)
+    return homepage
+
+@app.route("/faq")
+def faqpage():
+    return pages.faq
 
 def unit_word (inches):
     if inches == 1:
@@ -28,10 +32,5 @@ def format_amount(inches):
     unit = unit_word(reported_value)
     return str(reported_value) + ' ' + unit
 
-app = WSGIApplication([('/', MainHandler),
-                       ('/faq', FAQHandler)],
-                      debug=True)
-
 if __name__ == '__main__':
-    app.run()
-
+    WSGIServer(app).run()
