@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 import sys
-from flup.server.fcgi import WSGIServer
+from webapp2 import WSGIApplication, RequestHandler
 sys.path.append('/home/mmachenry/HowMuchSnow')
 import howmuchsnow
 import pages
@@ -16,18 +16,6 @@ class MainHandler (RequestHandler):
 class FAQHandler (RequestHandler):
     def get(self):
         return self.response.write(pages.faq)
-
-	<body style="text-align: center; padding-top: 200px;">
-
-	<a style="font-weight: bold; font-size: 120pt; font-family: 
-	Helvetica, sans-serif; text-decoration: none; color: black;">
-	""" + str(reported_value) + " " + unit_word(reported_value) + """
-	</a>
-
-
-	</body>
-	</html>
-    """
 
 def unit_word (inches):
     if inches == 1:
