@@ -5,15 +5,18 @@ from flask import Flask, request
 from flup.server.fcgi import WSGIServer
 import howmuchsnow
 import pages
+import sqlalchemy as sa
 
 app = Flask(__name__)
+
+engine = sa.create_engine(howmuchsnow.DB)
+conn = engine.connect()
 
 @app.route("/")
 def index():
     ip_addr = request.environ['REMOTE_ADDR']
-    inches = howmuchsnow.how_much_snow_ipv4(ip_addr)
+    inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
     amount = format_amount(inches)
-    amount = '1'
     homepage = pages.make_homepage(amount)
     return homepage
 
