@@ -35,7 +35,7 @@ def how_much_snow_gps (user_loc, conn):
         hour in hours]
     return meters2inches(max(amounts))
 
-def interpolate_closest (coordinates, lat, lon):
+def interpolate_closest (coordinates, (lat, lon)):
     '''Takes a list of 3 points in 3D space and the x and y coordinates of
     another point. Defines a plane over the points. Returns the z coordinate of
     the last point. The 3 coordinates do not have to surround the other point.'''
@@ -47,7 +47,7 @@ def interpolate_closest (coordinates, lat, lon):
     normal = np.cross(vector1, vector2)
     # plane equation is ax + by + cz = d
     a, b, c = normal
-    d = np.dot(coordinates[0], normal)
+    d = np.dot(coordinates[0][:3], normal)
     # z = (ax + by - d) / -c
     return np.dot([a, b, -d], [lat, lon, 1]) / -c
 
