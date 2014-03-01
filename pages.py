@@ -1,4 +1,5 @@
 def make_homepage (amount):
+    str_amount = format_amount(amount)
     return """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -11,13 +12,24 @@ def make_homepage (amount):
 
 <a style="font-weight: bold; font-size: 120pt; font-family:
 Helvetica, sans-serif; text-decoration: none; color: black;">
-%(amount)s
+""" + str_amount + """
 </a>
 
 
 </body>
 </html>
 """
+
+def format_amount(inches):
+    reported_value = int(round(inches))
+    unit = unit_word(reported_value)
+    return str(reported_value) + ' ' + unit
+
+def unit_word (inches):
+    if inches == 1:
+        return "inch"
+    else:
+        return "inches"
 
 faq = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
