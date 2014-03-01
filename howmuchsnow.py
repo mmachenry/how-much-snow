@@ -57,14 +57,16 @@ def get_nearest((lat, lon), conn):
 from
     prediction,
     (
-        select distinct
+        select
             latitude,
-            longitude,
-            distance(latitude,longitude, :x, :y)
+            longitude
         from
             prediction
+        group by
+            latitude,
+            longitude
         order by
-            3
+            distance(latitude,longitude, :x, :y)
         limit
             3
     ) closestThree

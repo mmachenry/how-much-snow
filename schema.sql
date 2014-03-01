@@ -6,6 +6,8 @@ create table prediction (
     metersofsnow real not null
 );
 
+create index latlon on prediction (latitude, longitude);
+
 create or replace function distance (lat1 real, long1 real, lat2 real, long2 real) returns real as $$
     declare
         x1 real;
