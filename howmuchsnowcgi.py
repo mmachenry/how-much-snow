@@ -5,6 +5,10 @@ from cgi import parse_qs
 sys.path.append('/home/mmachenry/HowMuchSnow')
 import howmuchsnow
 import pages
+import sqlalchemy as sa
+
+engine = sa.create_engine(howmuchsnow.DB)
+conn = engine.connect()
 
 def application(environ, start_response):
     start_response('200 OK', [('Content-Type', 'text/html')])
@@ -12,8 +16,9 @@ def application(environ, start_response):
     if 'faq' in parameters:
         yield pages.faq
     else:
-        response_body = pages.make_homepage(
-            howmuchsnow.how_much_snow_ipv4(environ['REMOTE_ADDR']))
+        ip_addr = request.environ['REMOTE_ADDR']
+        inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
+        response_body = pages.make_homepage(inches)
         yield response_body
 
 if __name__ == '__main__':
