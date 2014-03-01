@@ -23,11 +23,16 @@ def how_much_snow_gps (user_loc, conn):
     predicted for. Interpolates at each hour to get a predicted amount of
     snow. Returns the max predicted amount of snow.'''
     nearest = get_nearest(user_loc, conn)
-    coordinates = [(point['latitude'], point['longitude'], point['inches'], point['predictedfor'])
-                   for point in nearest]
+    coordinates = [(
+        point['latitude'],
+        point['longitude'],
+        point['metersofsnow'],
+        point['predictedfor'])
+        for point in nearest]
     keyfunc = lambda point: point[3]
     hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
-    amounts = [interpolate_closest(hour, user_loc) for hour in hours]
+    amounts = [interpolate_closest(np.asarray(hour), user_loc) for
+        hour in hours]
     return meters2inches(max(amounts))
 
 def interpolate_closest (coordinates, lat, lon):
