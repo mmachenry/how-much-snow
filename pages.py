@@ -12,7 +12,7 @@ def make_homepage (amount):
 
 <a style="font-weight: bold; font-size: 120pt; font-family:
 Helvetica, sans-serif; text-decoration: none; color: black;">
-%(str_amount)s
+""" + str_amount + """
 </a>
 
 
