@@ -59,11 +59,12 @@ from
     (
         select distinct
             latitude,
-            longitude
+            longitude,
+            distance(latitude,longitude, :x, :y)
         from
             prediction
         order by
-            distance(latitude,longitude, :x, :y)
+            3
         limit
             3
     ) closestThree
