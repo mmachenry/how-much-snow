@@ -51,10 +51,12 @@ def get_nearest((lat, lon), conn):
     three nearest points in the database.'''
     query = sa.text('''
 with
-    north_lat as ( select min(latitude) v from prediction where latitude > :x ),
-    south_lat as ( select max(latitude) v from prediction where latitude <= :x ),
-    east_lon as ( select min(longitude) v from prediction where longitude > :y ),
-    west_lon as ( select max(longitude) v from prediction where longitude <= :y )
+    box as (
+        ( select min(latitude) from prediction where latitude > :x ) north,
+        ( select max(latitude) v from prediction where latitude <= :x ) south,
+        ( select min(longitude) v from prediction where longitude > :y ) east,
+        ( select max(longitude) v from prediction where longitude <= :y ) west
+    )
 select
     prediction.predictedfor,
     prediction.latitude,
@@ -68,10 +70,14 @@ from
                longitude
         from
         (
-                  (select north_lat.v as latitude, east_lon.v as longitude from north_lat, east_lon)
-            union (select north_lat.v as latitude, west_lon.v as longitude from north_lat, west_lon)
-            union (select south_lat.v as latitude, east_lon.v as longitude from south_lat, east_lon)
-            union (select south_lat.v as latitude, west_lon.v as longitude from south_lat, west_lon)
+                  (select box.north as latitude, box.east as longitude
+                    from north_lat, east_lon)
+            union (select box.north as latitude, box.west_lon as longitude
+                    from north_lat, west_lon)
+            union (select box.south as latitude, box.east as longitude
+                    from south_lat, east_lon)
+            union (select box.south as latitude, box.west as longitude
+                    from south_lat, west_lon)
         ) closestFour
         order by
             distance(latitude,longitude, 10, 10)
@@ -83,7 +89,6 @@ where
     and prediction.longitude = closestThree.longitude
 order by
     prediction.predictedfor
-
     ''')
     return conn.execute(query, x = lat, y = lon)
 
