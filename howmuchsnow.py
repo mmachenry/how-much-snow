@@ -55,13 +55,13 @@ def get_nearest((lat, lon), conn):
     prediction.longitude,
     prediction.metersofsnow
 from
-    predictions,
+    prediction,
     (
         select distinct
             latitude,
             longitude
         from
-            predictions
+            prediction
         order by
             distance(latitude,longitude, :x, :y)
         limit
