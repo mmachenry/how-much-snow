@@ -49,7 +49,13 @@ def interpolate_closest (coordinates, (lat, lon)):
 def get_nearest((lat, lon), conn):
     '''Given user coordinates and a database connection, get all rows for the
     three nearest points in the database.'''
-    query = sa.text('''select
+    query = sa.text('''
+with
+    north_lat as ( select min(latitude) v from prediction where latitude > 10 ),
+    south_lat as ( select max(latitude) v from prediction where latitude <= 10 ),
+    east_lon as ( select min(longitude) v from prediction where longitude > 10 ),
+    west_lon as ( select max(longitude) v from prediction where longitude <= 10 )
+select
     prediction.predictedfor,
     prediction.latitude,
     prediction.longitude,
@@ -58,15 +64,17 @@ from
     prediction,
     (
         select
-            latitude,
-            longitude
+               latitude,
+               longitude
         from
-            prediction
-        group by
-            latitude,
-            longitude
+        (
+                  (select north_lat.v as latitude, east_lon.v as longitude from north_lat, east_lon)
+            union (select north_lat.v as latitude, west_lon.v as longitude from north_lat, west_lon)
+            union (select south_lat.v as latitude, east_lon.v as longitude from south_lat, east_lon)
+            union (select south_lat.v as latitude, west_lon.v as longitude from south_lat, west_lon)
+        ) closestFour
         order by
-            distance(latitude,longitude, :x, :y)
+            distance(latitude,longitude, 10, 10)
         limit
             3
     ) closestThree
@@ -74,7 +82,9 @@ where
     prediction.latitude = closestThree.latitude
     and prediction.longitude = closestThree.longitude
 order by
-    prediction.predictedfor''')
+    prediction.predictedfor
+
+    ''')
     return conn.execute(query, x = lat, y = lon)
 
 def meters2inches (m):
