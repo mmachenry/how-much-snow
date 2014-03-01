@@ -23,14 +23,14 @@ def how_much_snow_gps (user_loc, conn):
     predicted for. Interpolates at each hour to get a predicted amount of
     snow. Returns the max predicted amount of snow.'''
     nearest = get_nearest(user_loc, conn)
-    coordinates = [(point['latitude'], point['longitude'], point['inches'], point['predictedfor'])
+    coordinates = [(point['latitude'], point['longitude'], point['metersofsnow'], point['predictedfor'])
                    for point in nearest]
     keyfunc = lambda point: point[3]
     hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
-    amounts = [interpolate_closest(hour, user_loc) for hour in hours]
+    amounts = [interpolate_closest(np.asarray(hour), user_loc) for hour in hours]
     return meters2inches(max(amounts))
 
-def interpolate_closest (coordinates, lat, lon):
+def interpolate_closest (coordinates, (lat, lon)):
     '''Takes a list of 3 points in 3D space and the x and y coordinates of
     another point. Defines a plane over the points. Returns the z coordinate of
     the last point. The 3 coordinates do not have to surround the other point.'''
@@ -42,7 +42,7 @@ def interpolate_closest (coordinates, lat, lon):
     normal = np.cross(vector1, vector2)
     # plane equation is ax + by + cz = d
     a, b, c = normal
-    d = np.dot(coordinates[0], normal)
+    d = np.dot(coordinates[0][:3], normal)
     # z = (ax + by - d) / -c
     return np.dot([a, b, -d], [lat, lon, 1]) / -c
 
@@ -55,15 +55,16 @@ def get_nearest((lat, lon), conn):
     prediction.longitude,
     prediction.metersofsnow
 from
-    predictions,
+    prediction,
     (
         select distinct
             latitude,
-            longitude
-        from
-            predictions
-        order by
+            longitude,
             distance(latitude,longitude, :x, :y)
+        from
+            prediction
+        order by
+            3
         limit
             3
     ) closestThree
