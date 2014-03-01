@@ -16,7 +16,7 @@ def application(environ, start_response):
     if 'faq' in parameters:
         yield pages.faq
     else:
-        ip_addr = request.environ['REMOTE_ADDR']
+        ip_addr = environ['REMOTE_ADDR']
         inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
         response_body = pages.make_homepage(inches)
         yield response_body
