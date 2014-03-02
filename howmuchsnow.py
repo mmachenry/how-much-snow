@@ -51,7 +51,7 @@ def get_nearest((lat, lon), conn):
     three nearest points in the database.'''
     query = sa.text('''
 with
-    box as (
+    box as ( select
         ( select min(latitude) from prediction where latitude > :x ) north,
         ( select max(latitude) v from prediction where latitude <= :x ) south,
         ( select min(longitude) v from prediction where longitude > :y ) east,
