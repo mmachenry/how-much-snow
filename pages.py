@@ -25,7 +25,9 @@ Helvetica, sans-serif; text-decoration: none; color: black;">
 
 <!--Assuming you're near <a href="https://www.google.com/maps?q=%(lat)s%2C%(lon)s">%(lat)s&deg;%(NS)s %(lon)s&deg;%(EW)s</a> |
 Counts only snow falling after %(time)s -->
-<div><a href="/?faq=1">More information</a></div>
+<div style="position: fixed;
+  right: 15px;
+  bottom: 15px;"><a style="font-weight: bold; color: grey; text-decoration: none;" href="/?faq=1">More Information</a></div>
 
 <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
@@ -45,14 +47,18 @@ faq = """
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style type="text/css">
     p.q {font-weight:bold;}
+    a {text-decoration:underline;
+      color: black;}
+    body {text-align: left;
+          padding-left: 200px;
+          padding-bottom: 50px;
+          padding-top: 50px;}
     </style>
 </head>
 
-<body style="text-align: center; padding-top: 200px;">
-
 <div>
 <p class="q">Q. Who made this site?</p>
-<p class="a">A. <a href="http://xkcd.com/">Randall Munroe</a>, <a href="">Mike MacHenry</a>, and <a href="">Presley Pizzo</a>.</p>
+<p class="a">A. <a href="http://xkcd.com/">Randall Munroe</a>, <a href="http://turingcompletewasteoftime.blogspot.com/">Mike MacHenry</a>, and <a href="http://people.umass.edu/ppizzo/">Presley Pizzo</a>.</p>
 </div>
 
 <div>
@@ -87,7 +93,7 @@ faq = """
 
 <div>
 <p class="q">Q. What if I want to see the forecast for a specific day?</p>
-<p class="q">A. Use a real weather site.</p>
+<p class="a">A. Use a real weather site.</p>
 </div>
 
 <div>
