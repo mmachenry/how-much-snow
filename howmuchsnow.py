@@ -7,6 +7,8 @@ WEATHER_DIRECTORY = "/home/mmachenry/public_html/HowMuchSnow/weather_data"
 WGRIB_PROGRAM = "/home/mmachenry/wgrib2-v0.1.9.4/bin/wgrib2"
 GEOIP_DATABASE = "/usr/share/GeoIP/GeoLiteCity.dat"
 DB = 'postgresql://howmuchsnow:howmuchsnow@localhost/howmuchsnow'
+DELTA_LAT = 0.01
+DELTA_LON = 0.01
 
 def how_much_snow_ipv4 (ip_address, conn):
     return how_much_snow_gps (ipv4_to_gps (ip_address), conn)
@@ -51,13 +53,6 @@ def get_nearest((lat, lon), conn):
     '''Given user coordinates and a database connection, get all rows for the
     three nearest points in the database.'''
     query = sa.text('''
-with
-    box as ( select
-        ( select min(latitude) from prediction where latitude > :x ) north,
-        ( select max(latitude) v from prediction where latitude <= :x ) south,
-        ( select min(longitude) v from prediction where longitude > :y ) east,
-        ( select max(longitude) v from prediction where longitude <= :y ) west
-    )
 select
     prediction.predictedfor,
     prediction.latitude,
@@ -67,15 +62,13 @@ from
     prediction,
     (
         select
-               latitude,
-               longitude
+            latitude,
+            longitude
         from
-        (
-                  (select box.north as latitude, box.east as longitude from box)
-            union (select box.north as latitude, box.west as longitude from box)
-            union (select box.south as latitude, box.east as longitude from box)
-            union (select box.south as latitude, box.west as longitude from box)
-        ) closestFour
+            prediction
+        where
+            latitude between :x - delta_lat and :x + delta_lat
+            and longitude between :y - delta_lat and :y + delta_lon
         order by
             distance(latitude,longitude, 10, 10)
         limit
@@ -87,7 +80,12 @@ where
 order by
     prediction.predictedfor
     ''')
-    return conn.execute(query, x = lat, y = lon)
+    return conn.execute(
+        query,
+        x = lat,
+        y = lon,
+        delta_lat = DELTA_LAT,
+        delta_lon = DELTA_LON)
 
 def meters2inches (m):
     return m * 39.37
