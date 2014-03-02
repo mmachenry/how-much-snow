@@ -15,11 +15,23 @@ def application(environ, start_response):
     parameters = parse_qs(environ.get('QUERY_STRING', ''))
     if 'faq' in parameters:
         yield pages.faq
-    else:
+    elif 'geo' in parameters:
+        # chose to share location
+        lat = parameters['lat']
+        lon = parameters['lon']
+        inches = howmuchsnow.how_much_snow_gps((lat, lon), conn)
+        #TODO yield or return?
+        yield inches
+    elif 'ip' in parameters:
+        # didn't share location, get via IP address
         ip_addr = environ['REMOTE_ADDR']
         inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
-        response_body = pages.make_homepage(inches)
+        yield inches
+    else:
+        # go to homepage, JS there picks a geolocation strategy
+        response_body = pages.make_homepage()
         yield response_body
+
 
 if __name__ == '__main__':
     WSGIServer(application).run()
