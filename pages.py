@@ -1,5 +1,15 @@
-def make_homepage():
+def make_homepage (str_amount):
     return """
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body style="text-align: center; padding-top: 200px;">
+<a style="font-weight: bold; font-size: 120pt; font-family:Helvetica, sans-serif; text-decoration: none; color: black;">
+""" + str_amount + """
+</body>
+</html>
+    """
+
+homepage = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -13,8 +23,8 @@ def make_homepage():
 Helvetica, sans-serif; text-decoration: none; color: black;">
 </span>
 
-<!Assuming you're near <a href="https://www.google.com/maps?q=%(lat)s%2C%(lon)s">%(lat)s°%(NS)s %(lon)s°%(EW)s</a> •
-Counts only snow falling after %(time)s •>
+<!--Assuming you're near <a href="https://www.google.com/maps?q=%(lat)s%2C%(lon)s">%(lat)s&deg;%(NS)s %(lon)s&deg;%(EW)s</a> |
+Counts only snow falling after %(time)s -->
 <a href="/?faq=1">More information</a>
 
 <script src="jquery.js"></script>
@@ -93,5 +103,4 @@ Are In Space Right Now?</a>.</p>
 </body>
 </html>
 """
-
 

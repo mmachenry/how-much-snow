@@ -29,7 +29,9 @@ def application(environ, start_response):
         yield inches
     else:
         # go to homepage, JS there picks a geolocation strategy
-        response_body = pages.make_homepage()
+        ip_addr = environ['REMOTE_ADDR']
+        inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
+        response_body = pages.make_homepage(inches)
         yield response_body
 
 
