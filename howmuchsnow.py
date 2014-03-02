@@ -70,14 +70,10 @@ from
                longitude
         from
         (
-                  (select box.north as latitude, box.east as longitude
-                    from north_lat, east_lon)
-            union (select box.north as latitude, box.west_lon as longitude
-                    from north_lat, west_lon)
-            union (select box.south as latitude, box.east as longitude
-                    from south_lat, east_lon)
-            union (select box.south as latitude, box.west as longitude
-                    from south_lat, west_lon)
+                  (select box.north as latitude, box.east as longitude from box)
+            union (select box.north as latitude, box.west as longitude from box)
+            union (select box.south as latitude, box.east as longitude from box)
+            union (select box.south as latitude, box.west as longitude from box)
         ) closestFour
         order by
             distance(latitude,longitude, 10, 10)
