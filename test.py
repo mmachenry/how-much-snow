@@ -1,3 +1,6 @@
-from paste import httpserver
-import howmuchsnowcgi
-httpserver.serve(howmuchsnowcgi.app, host='127.0.0.1', port='8080')
+import sqlalchemy as sa
+import howmuchsnow
+
+engine = sa.create_engine(howmuchsnow.DB)
+conn = engine.connect()
+print howmuchsnow.how_much_snow_ipv4('174.63.41.187', conn)

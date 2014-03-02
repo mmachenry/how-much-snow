@@ -71,14 +71,18 @@ def store_file_in_database (dbh, filename):
     with open(filename, 'r') as f:
         reader = csv.reader(f)
         for row in reader:
-            rows.append("(" + ",".join([
-                "now()", #created
-                "'"+row[1]+"'",  #predictedfor
-                row[5],  #latitude
-                row[4],  #longitude
-                row[6]   #metersofsnow
-            ]) + ")")
-            #print row
+            if row[2] == "TSNOW.ens-mean":
+                rows.append("(" + ",".join([
+                    "now()", #created
+                    "'"+row[1]+"'",  #predictedfor
+                    row[5],  #latitude
+                    row[4],  #longitude
+                    row[6]   #metersofsnow
+                ]) + ")")
+            elif  row[2] == "FRZR.ens-mean":
+                pass
+            else:
+                print "Unknown row type: " + row[2]
 
     dbh.execute("""
         insert into predictiontemp (
