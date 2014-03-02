@@ -25,9 +25,11 @@ Helvetica, sans-serif; text-decoration: none; color: black;">
 
 <!--Assuming you're near <a href="https://www.google.com/maps?q=%(lat)s%2C%(lon)s">%(lat)s&deg;%(NS)s %(lon)s&deg;%(EW)s</a> |
 Counts only snow falling after %(time)s -->
-<a href="/?faq=1">More information</a>
+<div><a href="/?faq=1">More information</a></div>
 
-<script src="jquery.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+
 <script src="geoPosition.js"></script>
 <script src="howmuchsnow.js"></script>
 
