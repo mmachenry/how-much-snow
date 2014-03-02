@@ -7,8 +7,8 @@ WEATHER_DIRECTORY = "/home/mmachenry/public_html/HowMuchSnow/weather_data"
 WGRIB_PROGRAM = "/home/mmachenry/wgrib2-v0.1.9.4/bin/wgrib2"
 GEOIP_DATABASE = "/usr/share/GeoIP/GeoLiteCity.dat"
 DB = 'postgresql://howmuchsnow:howmuchsnow@localhost/howmuchsnow'
-DELTA_LAT = 0.01
-DELTA_LON = 0.01
+DELTA_LAT = 1
+DELTA_LON = 1
 
 def how_much_snow_ipv4 (ip_address, conn):
     return how_much_snow_gps (ipv4_to_gps (ip_address), conn)
@@ -67,8 +67,8 @@ from
         from
             prediction
         where
-            latitude between :x - delta_lat and :x + delta_lat
-            and longitude between :y - delta_lat and :y + delta_lon
+            latitude between :x - :delta_lat and :x + :delta_lat
+            and longitude between :y - :delta_lat and :y + :delta_lon
         order by
             distance(latitude,longitude, :x, :y)
         limit
