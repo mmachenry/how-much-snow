@@ -70,7 +70,7 @@ from
             latitude between :x - delta_lat and :x + delta_lat
             and longitude between :y - delta_lat and :y + delta_lon
         order by
-            distance(latitude,longitude, 10, 10)
+            distance(latitude,longitude, :x, :y)
         limit
             3
     ) closestThree
