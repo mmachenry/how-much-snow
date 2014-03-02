@@ -15,20 +15,24 @@ def application(environ, start_response):
     parameters = parse_qs(environ.get('QUERY_STRING', ''))
     if 'faq' in parameters:
         yield pages.faq
+    elif 'test' in parameters:
+        # test geolocation AJAX, leads to geo or ip
+        # will replace else branch once it's working
+        yield pages.homepage
     elif 'geo' in parameters:
-        # chose to share location
+        # test JS geoposition
         lat = parameters['lat']
         lon = parameters['lon']
         inches = howmuchsnow.how_much_snow_gps((lat, lon), conn)
         #TODO yield or return?
         yield inches
     elif 'ip' in parameters:
-        # didn't share location, get via IP address
+        # test use of IP address when user doesn't share location
         ip_addr = environ['REMOTE_ADDR']
         inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
         yield inches
     else:
-        # go to homepage, JS there picks a geolocation strategy
+        # go to homepage, use IP address
         ip_addr = environ['REMOTE_ADDR']
         inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
         response_body = pages.make_homepage(inches)
