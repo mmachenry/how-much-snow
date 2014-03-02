@@ -7,6 +7,8 @@ WEATHER_DIRECTORY = "/home/mmachenry/public_html/HowMuchSnow/weather_data"
 WGRIB_PROGRAM = "/home/mmachenry/wgrib2-v0.1.9.4/bin/wgrib2"
 GEOIP_DATABASE = "/usr/share/GeoIP/GeoLiteCity.dat"
 DB = 'postgresql://howmuchsnow:howmuchsnow@localhost/howmuchsnow'
+DELTA_LAT = 1
+DELTA_LON = 1
 
 def how_much_snow_ipv4 (ip_address, conn):
     return how_much_snow_gps (ipv4_to_gps (ip_address), conn)
@@ -50,7 +52,8 @@ def interpolate_closest (coordinates, (lat, lon)):
 def get_nearest((lat, lon), conn):
     '''Given user coordinates and a database connection, get all rows for the
     three nearest points in the database.'''
-    query = sa.text('''select
+    query = sa.text('''
+select
     prediction.predictedfor,
     prediction.latitude,
     prediction.longitude,
@@ -58,14 +61,16 @@ def get_nearest((lat, lon), conn):
 from
     prediction,
     (
-        select distinct
+        select
             latitude,
-            longitude,
-            distance(latitude,longitude, :x, :y)
+            longitude
         from
             prediction
+        where
+            latitude between :x - :delta_lat and :x + :delta_lat
+            and longitude between :y - :delta_lat and :y + :delta_lon
         order by
-            3
+            distance(latitude,longitude, :x, :y)
         limit
             3
     ) closestThree
@@ -73,8 +78,14 @@ where
     prediction.latitude = closestThree.latitude
     and prediction.longitude = closestThree.longitude
 order by
-    prediction.predictedfor''')
-    return conn.execute(query, x = lat, y = lon)
+    prediction.predictedfor
+    ''')
+    return conn.execute(
+        query,
+        x = lat,
+        y = lon,
+        delta_lat = DELTA_LAT,
+        delta_lon = DELTA_LON)
 
 def meters2inches (m):
     return m * 39.37

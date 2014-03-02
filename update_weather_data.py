@@ -74,8 +74,8 @@ def store_file_in_database (dbh, filename):
             rows.append("(" + ",".join([
                 "now()", #created
                 "'"+row[1]+"'",  #predictedfor
-                row[4],  #latitude
-                row[5],  #longitude
+                row[5],  #latitude
+                row[4],  #longitude
                 row[6]   #metersofsnow
             ]) + ")")
             #print row
