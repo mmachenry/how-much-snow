@@ -25,8 +25,12 @@ def how_much_snow_gps (user_loc, conn):
     predicted for. Interpolates at each hour to get a predicted amount of
     snow. Returns the max predicted amount of snow.'''
     nearest = get_nearest(user_loc, conn)
-    coordinates = [(point['latitude'], point['longitude'], point['metersofsnow'], point['predictedfor'])
-                   for point in nearest]
+    coordinates = [(
+        point['latitude'],
+        point['longitude'],
+        point['metersofsnow'],
+        point['predictedfor'])
+        for point in nearest]
     keyfunc = lambda point: point[3]
     hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
     amounts = [interpolate_closest(np.asarray(hour), user_loc) for hour in hours]
@@ -55,8 +59,8 @@ def get_nearest((lat, lon), conn):
     query = sa.text('''
 select
     prediction.predictedfor,
-    prediction.latitude,
-    prediction.longitude,
+    cast (prediction.latitude as real) as latitude,
+    cast (prediction.longitude as real) as longitude,
     prediction.metersofsnow
 from
     prediction,
@@ -69,6 +73,9 @@ from
         where
             latitude between :x - :delta_lat and :x + :delta_lat
             and longitude between :y - :delta_lat and :y + :delta_lon
+        group by
+            latitude,
+            longitude
         order by
             distance(latitude,longitude, :x, :y)
         limit
