@@ -1,12 +1,13 @@
 create table prediction (
     created timestamp not null,
     predictedfor timestamp not null,
-    latitude real not null,
-    longitude real not null,
+    latitude numeric(7,4) not null,
+    longitude numeric(7,4) not null,
     metersofsnow real not null
 );
 
-create index latlon on prediction (latitude, longitude);
+create index prediction_latitude on prediction (latitude);
+create index prediction_longitude on prediction (longitude);
 
 create or replace function distance (lat1 real, long1 real, lat2 real, long2 real) returns real as $$
     declare
