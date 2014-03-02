@@ -78,7 +78,7 @@ faq = """
 
 <div>
 <p class="q">Q. What if I want to see the forecast for a different location?</p>
-<p class="a">A. Use a <a href="www.hpc.ncep.noaa.gov/wwd/winter_wx.shtml">real weather site</a>.</p>
+<p class="a">A. Use a <a href="http://www.hpc.ncep.noaa.gov/wwd/winter_wx.shtml">real weather site</a>.</p>
 </div>
 
 <div>
