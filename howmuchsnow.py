@@ -28,7 +28,8 @@ def how_much_snow_gps (user_loc, conn):
     keyfunc = lambda point: point[3]
     hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
     amounts = [interpolate_closest(np.asarray(hour), user_loc) for hour in hours]
-    return meters2inches(max(amounts))
+    inches = meters2inches(max(amounts))
+    return format_amount(inches)
 
 def interpolate_closest (coordinates, (lat, lon)):
     '''Takes a list of 3 points in 3D space and the x and y coordinates of
@@ -77,4 +78,15 @@ order by
 
 def meters2inches (m):
     return m * 39.37
+
+def format_amount(inches):
+    reported_value = int(round(inches))
+    unit = unit_word(reported_value)
+    return str(reported_value) + ' ' + unit
+
+def unit_word (inches):
+    if inches == 1:
+        return "inch"
+    else:
+        return "inches"
 
