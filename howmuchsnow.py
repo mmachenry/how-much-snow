@@ -68,24 +68,19 @@ from
     prediction,
     (
         select
-            latitude,
-            longitude
+            locationid
         from
-            prediction
+            location
         where
             latitude between :x - :delta_lat and :x + :delta_lat
             and longitude between :y - :delta_lat and :y + :delta_lon
-        group by
-            latitude,
-            longitude
         order by
             distance(latitude,longitude, :x, :y)
         limit
             3
     ) closestThree
 where
-    prediction.latitude = closestThree.latitude
-    and prediction.longitude = closestThree.longitude
+    prediction.locationid = closestThree.locationid
 order by
     prediction.predictedfor
     ''')

@@ -97,11 +97,37 @@ def store_file_in_database (dbh, filename):
 def merge_temp_table (dbh):
     dbh.execute("""
         insert into
-            prediction
+            location (latitude, longitude)
         select
-            *
+            latitude,
+            longitude
         from
             predictiontemp
+        where
+            not exists (
+                select
+                    1
+                from
+                    location existing
+                where
+                    existing.latitude = predictiontemp.latitude
+                    and existing.longitude = predictiontemp.longitude
+            )
+    """)
+
+    dbh.execute("""
+        insert into
+            prediction (created, predictedfor, locationid, metersofsnow)
+        select
+            predictiontemp.created,
+            predictiontemp.predictedfor,
+            location.id,
+            predictiontemp.metersofsnow,
+        from
+            predictiontemp
+            join location
+                on location.latitude = predictiontemp.latitude
+                and location.longitude = predictiontemp.longitude
         where
             not exists (
                 select
@@ -123,10 +149,12 @@ def merge_temp_table (dbh):
             metersofsnow = predictiontemp.metersofsnow
         from
             predictiontemp
+            join location
+                on location.latitude = predictiontemp.latitude
+                and location.longitude = predictiontemp.longitude
         where
             prediction.predictedfor = predictiontemp.predictedfor
-            and prediction.latitude = predictiontemp.latitude
-            and prediction.longitude = predictiontemp.longitude
+            and location.id = prediction.locationid
     """)
 
 def remove_old_predictions(dbh):
