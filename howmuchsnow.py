@@ -7,8 +7,8 @@ WEATHER_DIRECTORY = "/home/mmachenry/public_html/HowMuchSnow/weather_data"
 WGRIB_PROGRAM = "/home/mmachenry/wgrib2-v0.1.9.4/bin/wgrib2"
 GEOIP_DATABASE = "/usr/share/GeoIP/GeoLiteCity.dat"
 DB = 'postgresql://howmuchsnow:howmuchsnow@localhost/howmuchsnow'
-DELTA_LAT = 1
-DELTA_LON = 1
+DELTA_LAT = 0.4 
+DELTA_LON = 0.4
 
 def how_much_snow_ipv4 (ip_address, conn):
     return how_much_snow_gps (ipv4_to_gps (ip_address), conn)
@@ -31,20 +31,22 @@ def how_much_snow_gps (user_loc, conn):
         point['metersofsnow'],
         point['predictedfor'])
         for point in nearest]
+    #coordinates=[]
     keyfunc = lambda point: point[3]
     hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
-    amounts = [interpolate_closest(np.asarray(hour), user_loc) for hour in hours]
-    inches = meters2inches(max(amounts))
-    return format_amount(inches)
+    try:
+        amounts = [interpolate_closest(np.asarray(hour), user_loc)
+            for hour in hours]
+        inches = meters2inches(max(amounts))
+        return format_amount(inches)
+    except (AssertionError, ValueError) as e:
+        return ""
 
 def interpolate_closest (coordinates, (lat, lon)):
     '''Takes a list of 3 points in 3D space and the x and y coordinates of
     another point. Defines a plane over the points. Returns the z coordinate of
     the last point. The 3 coordinates do not have to surround the other point.'''
-    try:
-        assert len(coordinates) == 3
-    except AssertionError:
-        return 0
+    assert len(coordinates) == 3
     vector1, vector2 = coordinates[0][:3] - coordinates[1][:3], coordinates[2][:3] - coordinates[1][:3]
     normal = np.cross(vector1, vector2)
     # plane equation is ax + by + cz = d

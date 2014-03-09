@@ -23,6 +23,8 @@ homepage = """
 Helvetica, sans-serif; text-decoration: none; color: black;">
 </span>
 
+<span id="out_of_range_msg" style="display:none">You're out of range.</span>
+
 <!--Assuming you're near <a href="https://www.google.com/maps?q=%(lat)s%2C%(lon)s">%(lat)s&deg;%(NS)s %(lon)s&deg;%(EW)s</a> |
 Counts only snow falling after %(time)s -->
 <div style="position: fixed;

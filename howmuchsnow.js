@@ -4,7 +4,12 @@ function getSnow(url){
     req.open("GET", url, true);
     req.onreadystatechange = function () {
         if (req.readyState == 4){
-            $("#snow").html(req.responseText);
+            result = req.responseText;
+            if (result == "") {
+                $("#out_of_range_msg").show();
+            } else {
+                $("#snow").html(result);
+            }
         }
     }
     req.send(null);
