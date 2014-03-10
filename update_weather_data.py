@@ -56,11 +56,12 @@ def get_connection (db):
 def do_db_import (dbh, temp_dir):
     create_temp_table(dbh)
     store_directory_in_database(dbh, temp_dir)
-    merge_temp_table(dbh)
+    create_locations(dbh)
+    merge_prediction_data(dbh)
     remove_old_predictions(dbh)
 
 def create_temp_table (dbh):
-    dbh.execute("create temporary table predictiontemp (like prediction)") 
+    dbh.execute("create temporary table predictiontemp (created timestamp, predictedfor timestamp, latitude numeric(7,4), longitude numeric(7,4), metersofsnow real)") 
 
 def store_directory_in_database (dbh, temp_dir):
     for filename in glob.glob(os.path.join(temp_dir, "*.csv")):
@@ -94,7 +95,7 @@ def store_file_in_database (dbh, filename):
         ) values
     """ + ",".join(rows))
 
-def merge_temp_table (dbh):
+def create_locations (dbh):
     dbh.execute("""
         insert into
             location (latitude, longitude)
@@ -113,8 +114,12 @@ def merge_temp_table (dbh):
                     existing.latitude = predictiontemp.latitude
                     and existing.longitude = predictiontemp.longitude
             )
+        group by
+            latitude,
+            longitude
     """)
 
+def merge_prediction_data (dbh):
     dbh.execute("""
         insert into
             prediction (created, predictedfor, locationid, metersofsnow)
@@ -122,7 +127,7 @@ def merge_temp_table (dbh):
             predictiontemp.created,
             predictiontemp.predictedfor,
             location.id,
-            predictiontemp.metersofsnow,
+            predictiontemp.metersofsnow
         from
             predictiontemp
             join location
@@ -136,8 +141,7 @@ def merge_temp_table (dbh):
                     prediction existing
                 where
                     predictiontemp.predictedfor = existing.predictedfor
-                    and predictiontemp.latitude = existing.latitude
-                    and predictiontemp.longitude = existing.longitude
+                    and location.id = existing.locationid
             )
     """)
 

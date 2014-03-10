@@ -61,14 +61,16 @@ def get_nearest((lat, lon), conn):
     query = sa.text('''
 select
     prediction.predictedfor,
-    cast (prediction.latitude as real) as latitude,
-    cast (prediction.longitude as real) as longitude,
+    cast (closestThree.latitude as real) as latitude,
+    cast (closestThree.longitude as real) as longitude,
     prediction.metersofsnow
 from
-    prediction,
-    (
+    prediction
+    join (
         select
-            locationid
+            id,
+            latitude,
+            longitude
         from
             location
         where
@@ -79,8 +81,7 @@ from
         limit
             3
     ) closestThree
-where
-    prediction.locationid = closestThree.locationid
+    on prediction.locationid = closestThree.id
 order by
     prediction.predictedfor
     ''')

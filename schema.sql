@@ -1,12 +1,3 @@
-create table prediction (
-    created timestamp not null,
-    predictedfor timestamp not null,
-    locationid integer not null,
-    metersofsnow real not null
-);
-
-create index prediction_location on prediction(location);
-
 create table location (
     id serial,
     latitude numeric(7,4) not null,
@@ -16,6 +7,15 @@ create table location (
 
 create index location_latitude on location (latitude);
 create index location_longitude on location (longitude);
+
+create table prediction (
+    created timestamp not null,
+    predictedfor timestamp not null,
+    locationid integer not null,
+    metersofsnow real not null
+);
+
+create index prediction_location on prediction(locationid);
 
 create or replace function distance (lat1 real, long1 real, lat2 real, long2 real) returns real as $$
     declare
