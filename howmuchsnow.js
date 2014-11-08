@@ -33,4 +33,5 @@ $(function (){
     else {
         useIP();
     }
+    useIP();
 });
