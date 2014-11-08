@@ -31,13 +31,17 @@ def how_much_snow_gps (user_loc, conn):
         point['metersofsnow'],
         point['predictedfor'])
         for point in nearest]
-    #coordinates=[]
     keyfunc = lambda point: point[3]
     hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
     try:
         amounts = [interpolate_closest(np.asarray(hour), user_loc)
             for hour in hours]
-        inches = meters2inches(max(amounts))
+        maxm = max(amounts)
+        if maxm < 0: # this can happen if you're outside your triangle
+            maxm = 0
+        if maxm.isnan(): # if three points are in a line
+            raise ValueError
+        inches = meters2inches(maxm)
         return format_amount(inches)
     except (AssertionError, ValueError) as e:
         return ""
