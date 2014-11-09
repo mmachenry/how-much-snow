@@ -39,7 +39,7 @@ def how_much_snow_gps (user_loc, conn):
         maxm = max(amounts)
         if maxm < 0: # this can happen if you're outside your triangle
             maxm = 0
-        if maxm.isnan(): # if three points are in a line
+        if np.isnan(maxm): # if three points are in a line
             raise ValueError
         inches = meters2inches(maxm)
         return format_amount(inches)
