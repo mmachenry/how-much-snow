@@ -110,3 +110,7 @@ def unit_word (inches):
     else:
         return "inches"
 
+def make_coordinates(lat, lon):
+    return '''Assuming you're near <a
+        href="https://www.google.com/maps?q={0}%2C{1}">{0}&deg;N
+        {1}&deg;W</a> | '''.format(lat, lon)

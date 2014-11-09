@@ -4,11 +4,15 @@ function getSnow(url){
     req.open("GET", url, true);
     req.onreadystatechange = function () {
         if (req.readyState === 4){
-            result = req.responseText;
-            if (result === "") {
+            // result = req.responseText;
+            result = JSON.parse(req.responseText);
+            // if (result === "") {
+            if (result.inches === "") {
                 $("#out_of_range_msg").show();
             } else {
-                $("#snow").html(result);
+                // $("#snow").html(result);
+                $("#snow").html(result.inches);
+                $("#coordinates").html(result.coords);
             }
         }
     };

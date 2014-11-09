@@ -6,9 +6,16 @@ sys.path.append('/home/mmachenry/HowMuchSnow')
 import howmuchsnow
 import pages
 import sqlalchemy as sa
+import json
 
 engine = sa.create_engine(howmuchsnow.DB)
 conn = engine.connect()
+
+def get_info(lat, lon):
+    return json.dumps({
+        'inches': howmuchsnow.how_much_snow_gps((lat, lon), conn),
+        'coords': howmuchsnow.make_coordinates(lat, lon)
+        })
 
 def application(environ, start_response):
     start_response('200 OK', [('Content-Type', 'text/html')])
@@ -16,17 +23,17 @@ def application(environ, start_response):
     if 'faq' in parameters:
         yield pages.faq
     elif 'geo' in parameters:
-        # test JS geoposition
         lat = float(parameters['lat'][0])
         lon = float(parameters['lon'][0])
-        inches = howmuchsnow.how_much_snow_gps((lat, lon), conn)
-        #TODO yield or return?
-        yield inches
+        # inches = howmuchsnow.how_much_snow_gps((lat, lon), conn)
+        # yield inches
+        yield get_info(lat, lon)
     elif 'ip' in parameters:
-        # test use of IP address when user doesn't share location
         ip_addr = environ['REMOTE_ADDR']
-        inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
-        yield inches
+        lat, lon = ipv4_to_gps(ip_addr)
+        # inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
+        # yield inches
+        yield get_info(lat, lon)
     else:
         yield pages.homepage
 
