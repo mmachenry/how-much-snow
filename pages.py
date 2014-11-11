@@ -29,7 +29,11 @@ Helvetica, sans-serif; text-decoration: none; color: black;">
 Counts only snow falling after %(time)s -->
 <div style="position: fixed;
   right: 15px;
-  bottom: 15px;"><a style="font-weight: bold; color: grey; text-decoration: none;" href="/?faq=1">More Information</a></div>
+  bottom: 15px;">
+  <span style="color: grey; text-decoration: none;" id="coordinates"></span>
+  <a style="font-weight: bold; color: grey; text-decoration: none;" href="/?faq=1">More Information</a>
+  
+</div>
 
 <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
