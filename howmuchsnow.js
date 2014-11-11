@@ -1,4 +1,7 @@
-function getSnow(url){
+function useGeolocation(position){
+    var lat = position.coords.latitude;
+    var lon = position.coords.longitude;
+    var url = "/?geo=1&lat=" + lat + "&lon=" + lon;
     var req = new XMLHttpRequest();
     var result = "empty";
     req.open("GET", url, true);
@@ -19,23 +22,16 @@ function getSnow(url){
     req.send(null);
 }
 
-function useGeolocation(position){
-    var lat = position.coords.latitude;
-    var lon = position.coords.longitude;
-    var url = "/?geo=1&lat=" + lat + "&lon=" + lon;
-    getSnow(url);
-}
-
-function useIP () {
-    getSnow("/?ip=1");
+function onDenied () {
+    $("#snow").html("denied");
 }
 
 $(function (){
     if (geoPosition.init()) {
-        geoPosition.getCurrentPosition(useGeolocation, useIP);
+        geoPosition.getCurrentPosition(useGeolocation, onDenied);
     }
     else {
-        useIP();
+        $("#snow").html("fail to init");
     }
-    useIP();
 });
+
