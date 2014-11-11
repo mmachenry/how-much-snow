@@ -20,17 +20,17 @@ homepage = """
 <body style="text-align: center; padding-top: 200px;">
 
 <span id="snow" style="font-weight: bold; font-size: 120pt; font-family:
-Helvetica, sans-serif; text-decoration: none; color: black;">
+Helvetica, sans-serif; text-decoration: none; color: black;">? inches
 </span>
 
 <span id="out_of_range_msg" style="display:none">You're out of range.</span>
 
-<!--Assuming you're near <a href="https://www.google.com/maps?q=%(lat)s%2C%(lon)s">%(lat)s&deg;%(NS)s %(lon)s&deg;%(EW)s</a> |
-Counts only snow falling after %(time)s -->
 <div style="position: fixed;
   right: 15px;
   bottom: 15px;">
-  <span style="color: grey; text-decoration: none;" id="coordinates"></span>
+  <span style="color: grey; text-decoration: none;" id="coordinates">
+  Awaiting your location information.
+  </span>
   <a style="font-weight: bold; color: grey; text-decoration: none;" href="/?faq=1">More Information</a>
   
 </div>
