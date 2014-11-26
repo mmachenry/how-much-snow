@@ -46,18 +46,19 @@ def how_much_snow_gps (user_loc, conn):
     except (AssertionError, ValueError) as e:
         return ""
 
-def interpolate_closest (coordinates, (lat, lon)):
-    '''Takes a list of 3 points in 3D space and the x and y coordinates of
-    another point. Defines a plane over the points. Returns the z coordinate of
-    the last point. The 3 coordinates do not have to surround the other point.'''
-    assert len(coordinates) == 3
-    vector1, vector2 = coordinates[0][:3] - coordinates[1][:3], coordinates[2][:3] - coordinates[1][:3]
-    normal = np.cross(vector1, vector2)
-    # plane equation is ax + by + cz = d
-    a, b, c = normal
-    d = np.dot(coordinates[0][:3], normal)
-    # z = (ax + by - d) / -c
-    return np.dot([a, b, -d], [lat, lon, 1]) / -c
+def distance ((lat1, lon1), (lat2, lon2)):
+    return ((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2) ** (0.5)
+ 
+def interpolate_closest (points, (lat, lon)):
+    '''A weighted average of the amount of snow for a given location based on
+    the amount of snow at other locations. Inverse distance weighted'''
+    total = 0;
+    influence = [];
+    for (plat, plon, snow, time) in points:
+        i = 1 / distance((plat, plon), (lat, lon))
+        influence.append(i)
+        total += i * snow
+    return total / sum(influence)
 
 def get_nearest((lat, lon), conn):
     '''Given user coordinates and a database connection, get all rows for the
