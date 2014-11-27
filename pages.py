@@ -64,7 +64,8 @@ faq = """
 
 <div>
 <p class="q">Q. Who made this site?</p>
-<p class="a">A. <a href="http://xkcd.com/">Randall Munroe</a>, <a href="http://turingcompletewasteoftime.blogspot.com/">Mike MacHenry</a>, and <a href="http://people.umass.edu/ppizzo/">Presley Pizzo</a>.</p>
+<p class="a">A. <a href="http://xkcd.com/">Randall Munroe</a>, <a
+href="http://turingcompletewasteoftime.blogspot.com/">Mike MacHenry</a>, and <a href="https://github.com/presleyp/">Presley Pizzo</a>.</p>
 </div>
 
 <div>
