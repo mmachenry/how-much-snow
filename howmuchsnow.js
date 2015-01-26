@@ -7,13 +7,10 @@ function useGeolocation(position){
     req.open("GET", url, true);
     req.onreadystatechange = function () {
         if (req.readyState === 4){
-            // result = req.responseText;
             result = JSON.parse(req.responseText);
-            // if (result === "") {
             if (result.inches === "") {
                 $("#out_of_range_msg").show();
             } else {
-                // $("#snow").html(result);
                 $("#snow").html(result.inches);
                 $("#coordinates").html(result.coords);
             }
@@ -26,12 +23,27 @@ function onDenied () {
     $("#coordinates").html("Location permission denied.");
 }
 
+// ellipsis animation
+var dots = 0;
+
+function animateDots() {
+    if (dots < 3) {
+        $('#dots').append('.');
+        dots++;
+    } else {
+        $('#dots').html('');
+        dots = 0;
+    }
+}
+
 $(function (){
+    setInterval(animateDots, 600);
+
     if (geoPosition.init()) {
         geoPosition.getCurrentPosition(useGeolocation, onDenied);
     }
     else {
-        $("#snow").html("fail to init");
+        $("#snow").html("Sorry, we can't get your location.");
     }
 });
 

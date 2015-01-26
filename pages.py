@@ -19,27 +19,26 @@ homepage = """
 
 <body style="text-align: center; padding-top: 200px;">
 
-<span id="snow" style="font-weight: bold; font-size: 120pt; font-family:
-Helvetica, sans-serif; text-decoration: none; color: black;">? inches
-</span>
+    <span id="snow" style="font-weight: bold; font-size: 120pt; font-family:
+    Helvetica, sans-serif; text-decoration: none; color: black;">
+    Getting your location<span id="dots"></span>
+    </span>
 
-<span id="out_of_range_msg" style="display:none">You're out of range.</span>
+    <span id="out_of_range_msg" style="display:none">You're out of range.</span>
 
-<div style="position: fixed;
-  right: 15px;
-  bottom: 15px;">
-  <span style="color: grey; text-decoration: none;" id="coordinates">
-  Awaiting your location information.
-  </span>
-  <a style="font-weight: bold; color: grey; text-decoration: none;" href="/?faq=1">More Information</a>
-  
-</div>
+    <div style="position: fixed;
+      right: 15px;
+      bottom: 15px;">
+      <span style="color: grey; text-decoration: none;" id="coordinates">
+      </span>
+      <a style="font-weight: bold; color: grey; text-decoration: none;" href="/?faq=1">More Information</a>
+    </div>
 
-<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
-<script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 
-<script src="geoPosition.js"></script>
-<script src="howmuchsnow.js"></script>
+    <script src="geoPosition.js"></script>
+    <script src="howmuchsnow.js"></script>
 
 </body>
 </html>
