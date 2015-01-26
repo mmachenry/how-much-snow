@@ -23,7 +23,7 @@ function useGeolocation(position){
 }
 
 function onDenied () {
-    $("#snow").html("denied");
+    $("#coordinates").html("Location permission denied.");
 }
 
 $(function (){
