@@ -24,15 +24,7 @@ def how_much_snow_gps (user_loc, conn):
     three points to the user. Groups the data by the hour the snowfall is
     predicted for. Interpolates at each hour to get a predicted amount of
     snow. Returns the max predicted amount of snow.'''
-    nearest = get_nearest(user_loc, conn)
-    coordinates = [(
-        point['latitude'],
-        point['longitude'],
-        point['metersofsnow'],
-        point['predictedfor'])
-        for point in nearest]
-    keyfunc = lambda point: point[3]
-    hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
+    hours = get_nearest_by_hour(user_loc, conn)
     try:
         amounts = [interpolate_closest(np.asarray(hour), user_loc)
             for hour in hours]
@@ -59,6 +51,20 @@ def interpolate_closest (points, (lat, lon)):
         influence.append(i)
         total += i * snow
     return total / sum(influence)
+
+def get_nearest_by_hour (user_loc, conn):
+    '''A list of lists of the three closest weather stations and their amount
+    of predicted snow for each hour in the future for which we have data.'''
+    nearest = get_nearest(user_loc, conn)
+    coordinates = [(
+        point['latitude'],
+        point['longitude'],
+        point['metersofsnow'],
+        point['predictedfor'])
+        for point in nearest]
+    keyfunc = lambda point: point[3]
+    hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
+    return hours
 
 def get_nearest((lat, lon), conn):
     '''Given user coordinates and a database connection, get all rows for the
