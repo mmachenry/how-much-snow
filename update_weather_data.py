@@ -45,7 +45,7 @@ def get_latest_run_filenames (ftp):
     ftp.cwd(latestDirectory)
     filenames = ftp.nlst()
     l = len(filenames)
-    return sorted(filenames)[l-30:l-1]
+    return sorted(filenames)[l-30:l]
 
 def convert_to_csv (temp_dir):
     DEVNULL = open(os.devnull, 'w')
