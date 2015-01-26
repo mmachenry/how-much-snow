@@ -30,11 +30,10 @@ def download_weather_data (temp_dir):
 
     # Download all the new files.
     for filename in filenames:
-        if re.match(r'^sref_xwwd_us_[0-9]{8}09f[0-9]{2}.grb$', filename):
-            local_filename = os.path.join(temp_dir, filename)
-            file = open(local_filename, 'wb')
-            ftp.retrbinary('RETR '+ filename, file.write)
-            file.close()
+        local_filename = os.path.join(temp_dir, filename)
+        file = open(local_filename, 'wb')
+        ftp.retrbinary('RETR '+ filename, file.write)
+        file.close()
     ftp.close()
 
 def get_latest_run_filenames (ftp):
