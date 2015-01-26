@@ -26,21 +26,26 @@ def download_weather_data (temp_dir):
     ftp = FTP('ftp.hpc.ncep.noaa.gov')
     ftp.login()
 
-    # Get a list of all the new files.
-    ftp.cwd('winwx_impact')
-    latestDirectory = max(filter(
-        lambda dir: re.match("^[0-9]+$", dir),
-        ftp.nlst()))
-    ftp.cwd(latestDirectory)
+    filenames = get_latest_run_filenames(ftp)
 
     # Download all the new files.
-    for filename in ftp.nlst():
+    for filename in filenames:
         if re.match(r'^sref_xwwd_us_[0-9]{8}09f[0-9]{2}.grb$', filename):
             local_filename = os.path.join(temp_dir, filename)
             file = open(local_filename, 'wb')
             ftp.retrbinary('RETR '+ filename, file.write)
             file.close()
     ftp.close()
+
+def get_latest_run_filenames (ftp):
+    ftp.cwd('winwx_impact')
+    latestDirectory = max(filter(
+        lambda dir: re.match("^[0-9]+$", dir),
+        ftp.nlst()))
+    ftp.cwd(latestDirectory)
+    filenames = ftp.nlst()
+    l = len(filenames)
+    return sorted(filenames)[l-30:l-1]
 
 def convert_to_csv (temp_dir):
     DEVNULL = open(os.devnull, 'w')
