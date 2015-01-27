@@ -11,7 +11,8 @@ function useGeolocation(position){
             if (result.inches === "") {
                 $("#out_of_range_msg").show();
             } else {
-                $("#snow").html(result.inches);
+                $("#snow").html(result.inches).css("font-size", "120pt");
+                $("body").css("text-align", "center");
                 $("#coordinates").html(result.coords);
             }
         }
