@@ -63,13 +63,19 @@ faq = """
 
 <div>
 <p class="q">Q. Who made this site?</p>
-<p class="a">A. <a href="http://xkcd.com/">Randall Munroe</a>, <a
-href="http://turingcompletewasteoftime.blogspot.com/">Mike MacHenry</a>, and <a href="https://github.com/presleyp/">Presley Pizzo</a>.</p>
+<p class="a">A.</p>
+<p class="a"><a href="http://xkcd.com/">Randall Munroe</a> - Vowels</p>
+<p class="a"><a href="https://github.com/presleyp/">Presley Pizzo</a> - Consonants</p>
+<p class="a"><a href="http://turingcompletewasteoftime.blogspot.com/">Mike MacHenry</a> -
+Punctuation</p>
+
 </div>
 
 <div>
 <p class="q">Q. What does the number represent?</p>
-<p class="a">A. The predicted accumulation in your area from the largest snowstorm you're expected to get during the next few days.</p>
+<p class="a">A. The predicted accumulation in your area from the largest
+snowstorm you're expected to get during the next few days. It only counts
+snow that you haven't gotten yet, and we get updated data every six hours.</p>
 </div>
 
 <div>
@@ -113,6 +119,17 @@ href="http://turingcompletewasteoftime.blogspot.com/">Mike MacHenry</a>, and <a 
 <p class="a">A. Use <a href="http://www.howmanypeopleareinspacerightnow.com">How Many People
 Are In Space Right Now?</a>.</p>
 </div>
+
+<div style="position: fixed;
+  right: 15px;
+  bottom: 15px;">
+  <span style="color: grey; text-decoration: none;" id="coordinates">
+  </span>
+  <a style="font-weight: bold; color: grey; text-decoration: none;"
+  href="/">How Much Snow Am I Going to Get?</a>
+</div>
+
+
 
 </body>
 </html>
