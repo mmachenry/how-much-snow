@@ -17,9 +17,9 @@ homepage = """
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 
-<body style="text-align: center; padding-top: 200px;">
+<body style="text-align: left; padding-top: 200px; padding-left: 100px; padding-right: 100px">
 
-    <span id="snow" style="font-weight: bold; font-size: 120pt; font-family:
+    <span id="snow" style="font-weight: bold; font-size: 80pt; font-family:
     Helvetica, sans-serif; text-decoration: none; color: black;">
     Getting your location<span id="dots"></span>
     </span>
