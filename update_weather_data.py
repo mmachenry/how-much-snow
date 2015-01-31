@@ -22,18 +22,11 @@ def main ():
     shutil.rmtree(temp_dir)
 
 def download_weather_data (temp_dir):
-    # Connect to the FTP site.
     ftp = FTP('ftp.hpc.ncep.noaa.gov')
     ftp.login()
-
     filenames = get_latest_run_filenames(ftp)
-
-    # Download all the new files.
     for filename in filenames:
-        local_filename = os.path.join(temp_dir, filename)
-        file = open(local_filename, 'wb')
-        ftp.retrbinary('RETR '+ filename, file.write)
-        file.close()
+        download_file(ftp, temp_dir, filename)
     ftp.close()
 
 def get_latest_run_filenames (ftp):
@@ -45,6 +38,12 @@ def get_latest_run_filenames (ftp):
     filenames = ftp.nlst()
     l = len(filenames)
     return sorted(filenames)[l-30:l-1]
+
+def download_file(ftp, temp_dir, filename):
+    local_filename = os.path.join(temp_dir, filename)
+    file = open(local_filename, 'wb')
+    ftp.retrbinary('RETR '+ filename, file.write)
+    file.close()
 
 def convert_to_csv (temp_dir):
     DEVNULL = open(os.devnull, 'w')
