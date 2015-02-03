@@ -1,28 +1,23 @@
+import sys
+sys.path.append("/home/mmachenry/src/HowMuchSnow")
 from itertools import groupby
 import sqlalchemy as sa
 import howmuchsnow
-import sys
 import pprint
 import numpy as np
 
 places = {
     "sean" : (40.659437,-75.3995089),
-    "platsburg" : (44.6961485,-73.4569312)
+    "platsburg" : (44.6961485,-73.4569312),
+    "bozeman" : (45.683884, -111.039916),
+    "phillips" : (45.660854, -90.217734),
+    "mike" : (42.401981,-71.122687)
 }
 
-user_loc = places['sean']
+user_loc = places['mike']
 
 engine = sa.create_engine(howmuchsnow.DB)
 conn = engine.connect()
-
-hours = howmuchsnow.get_nearest_by_hour(user_loc, conn)
-
-for hour in hours:
-    time = hour[0][3]
-    print time,": ",howmuchsnow.interpolate_closest(np.asarray(hour), user_loc)
-    for loc in hour:
-        print "    (",  loc[0], ",", loc[1], ") : ", loc[2]
-    print
 
 print howmuchsnow.how_much_snow_gps(user_loc, conn)
 

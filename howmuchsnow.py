@@ -1,22 +1,6 @@
-from itertools import groupby
-import pygeoip
 import sqlalchemy as sa
-import numpy as np
 
-WEATHER_DIRECTORY = "/home/mmachenry/public_html/HowMuchSnow/weather_data"
-WGRIB_PROGRAM = "/home/mmachenry/wgrib2-v0.1.9.4/bin/wgrib2"
-GEOIP_DATABASE = "/usr/share/GeoIP/GeoLiteCity.dat"
-DB = 'postgresql://howmuchsnow:howmuchsnow@localhost/howmuchsnow'
-DELTA_LAT = 0.4 
-DELTA_LON = 0.4
-
-def how_much_snow_ipv4 (ip_address, conn):
-    return how_much_snow_gps (ipv4_to_gps (ip_address), conn)
-
-def ipv4_to_gps (ip_address):
-    gi = pygeoip.GeoIP(GEOIP_DATABASE)
-    record = gi.record_by_addr(ip_address)
-    return record['latitude'], record['longitude']
+DB = 'postgresql://howmuchsnow:howmuchsnow@localhost/howmuchsnow_test'
 
 def how_much_snow_gps (user_loc, conn):
     '''Takes a tuple of a user's estimated latitude and longitude, and a
@@ -24,87 +8,33 @@ def how_much_snow_gps (user_loc, conn):
     three points to the user. Groups the data by the hour the snowfall is
     predicted for. Interpolates at each hour to get a predicted amount of
     snow. Returns the max predicted amount of snow.'''
-    hours = get_nearest_by_hour(user_loc, conn)
-    try:
-        amounts = [interpolate_closest(np.asarray(hour), user_loc)
-            for hour in hours]
-        maxm = max(amounts)
-        if maxm < 0: # this can happen if you're outside your triangle
-            maxm = 0
-        if np.isnan(maxm): # if three points are in a line
-            raise ValueError
-        inches = meters2inches(maxm)
-        return format_amount(inches)
-    except (AssertionError, ValueError) as e:
-        return ""
+    inches_of_snow = get_from_db (user_loc, conn)
+    return format_amount(inches_of_snow)
 
-def distance ((lat1, lon1), (lat2, lon2)):
-    return ((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2) ** (0.5)
- 
-def interpolate_closest (points, (lat, lon)):
-    '''A weighted average of the amount of snow for a given location based on
-    the amount of snow at other locations. Inverse distance weighted'''
-    total = 0;
-    influence = [];
-    for (plat, plon, snow, time) in points:
-        i = 1 / distance((plat, plon), (lat, lon))
-        influence.append(i)
-        total += i * snow
-    return total / sum(influence)
-
-def get_nearest_by_hour (user_loc, conn):
-    '''A list of lists of the three closest weather stations and their amount
-    of predicted snow for each hour in the future for which we have data.'''
-    nearest = get_nearest(user_loc, conn)
-    coordinates = [(
-        point['latitude'],
-        point['longitude'],
-        point['metersofsnow'],
-        point['predictedfor'])
-        for point in nearest]
-    keyfunc = lambda point: point[3]
-    hours = [list(val) for (key, val) in groupby(coordinates, keyfunc)]
-    return hours
-
-def get_nearest((lat, lon), conn):
-    '''Given user coordinates and a database connection, get all rows for the
-    three nearest points in the database.'''
+def get_from_db ((latitude, longitude), conn):
+    '''Given user coordinates and a database connection, get the weighted average
+    by distance squared of all of the nearby stations. Returns amount of snow in inches.
+    '''
     query = sa.text('''
-select
-    prediction.predictedfor,
-    cast (closestThree.latitude as real) as latitude,
-    cast (closestThree.longitude as real) as longitude,
-    prediction.metersofsnow
-from
-    prediction
-    join (
         select
-            id,
-            latitude,
-            longitude
-        from
-            location
-        where
-            latitude between :x - :delta_lat and :x + :delta_lat
-            and longitude between :y - :delta_lat and :y + :delta_lon
-        order by
-            distance(latitude,longitude, :x, :y)
-        limit
-            3
-    ) closestThree
-    on prediction.locationid = closestThree.id
-order by
-    prediction.predictedfor
+            sum(influence * msnow) / sum (influence) * 39.3701
+        from (
+            select
+                1 / distance(latitude, longitude, :lat, :lon)^2 influence,
+                sum ( metersofsnow ) msnow
+            from
+                prediction
+            join
+                location on location.id = prediction.locationid
+            where
+                distance(latitude, longitude, :lat, :lon) < 50
+            group by
+                latitude,
+                longitude
+            ) aggregate
     ''')
-    return conn.execute(
-        query,
-        x = lat,
-        y = lon,
-        delta_lat = DELTA_LAT,
-        delta_lon = DELTA_LON)
-
-def meters2inches (m):
-    return m * 39.37
+    (result,) = conn.execute(query, lat = latitude, lon = longitude).first()
+    return result
 
 def format_amount(inches):
     reported_value = int(round(inches))

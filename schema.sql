@@ -12,24 +12,36 @@ create table prediction (
     created timestamp not null,
     predictedfor timestamp not null,
     locationid integer not null,
-    metersofsnow real not null
+    apcp real not null,
+    tmp real not null,
+    csnow integer not null,
+    metersofsnow real
 );
 
 create index prediction_location on prediction(locationid);
 
-create or replace function distance (lat1 real, long1 real, lat2 real, long2 real) returns real as $$
+create or replace function distance (lat1 real, lon1 real, lat2 real, lon2 real) returns real as $$
+/*
+The distance in km between the two points.
+
+Example test case:
+select distance (40, -72, 35, -78);
+distance 
+----------
+765.897
+*/
     declare
-        x1 real;
-        x2 real;
+        lon real;
+        lat real;
+        longitudes real;
+        latitudes real;
         distance real;
     begin
-        /* Longitude is already in correct format (degrees east of PM)
-         Latitude should be subtracted from 90, southern lats are negative
-         so this gives degrees south of the North Pole for all latitudes */
-        x1 := 90 - lat1;
-        x2 := 90 - lat2;
-        distance := sqrt((x1 - x2)^2 + (long1 - long2)^2);
-        return distance;
+        lon := 111.3194907784152;
+        lat := 110.5743885571743;
+        longitudes = lon*abs(lon1-lon2)*cos(3.14/180 * (lat1+lat2) / 2.0);
+        latitudes = lat*abs(lat1-lat2);
+        return sqrt(latitudes^2 + longitudes^2);
     end;
     $$
     language plpgsql
