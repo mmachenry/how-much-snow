@@ -86,7 +86,7 @@ def do_db_import (dbh, filenames):
     remove_old_predictions(dbh)
 
 def create_temp_table (dbh):
-    dbh.execute("create temporary table predictiontemp (created timestamp, predictedfor timestamp, latitude numeric(7,4), longitude numeric(7,4), apcp real, tmp real, csnow integer, metersofsnow real)") 
+    dbh.execute("create temporary table predictiontemp (created timestamp, predictedfor timestamp, latitude numeric(7,4), longitude numeric(7,4), apcp real, tmp real, csnow integer)") 
 
 def store_files_in_database (dbh, filenames):
     initial_insert = True
@@ -162,15 +162,14 @@ def create_locations (dbh):
 def merge_prediction_data (dbh):
     dbh.execute("""
         insert into
-            prediction (created, predictedfor, locationid, apcp, tmp, csnow, metersofsnow)
+            prediction (created, predictedfor, locationid, apcp, tmp, csnow)
         select
             now(),
             predictiontemp.predictedfor,
             location.id,
             predictiontemp.apcp,
             predictiontemp.tmp,
-            predictiontemp.csnow,
-            413
+            predictiontemp.csnow
         from
             predictiontemp
             join location
@@ -195,8 +194,7 @@ def merge_prediction_data (dbh):
             created = now(),
             apcp = predictiontemp.apcp,
             tmp = predictiontemp.tmp,
-            csnow = predictiontemp.csnow,
-            metersofsnow = 413
+            csnow = predictiontemp.csnow
         from
             predictiontemp
             join location
@@ -206,6 +204,17 @@ def merge_prediction_data (dbh):
             prediction.predictedfor = predictiontemp.predictedfor
             and location.id = prediction.locationid
     """)
+
+    dbh.execute("""
+        update
+            prediction
+        set
+            metersofsnow =
+                case when csnow = 1
+                     then (281.15-tmp) * apcp * 0.001
+                     else 0 end
+    """)
+
 
 def remove_old_predictions(dbh):
     dbh.execute("delete from prediction where predictedfor < now()")
