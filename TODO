@@ -1,4 +1,3 @@
-Test is all browsers, fix AJAX in some browesers.
-Debug very high prediction data in test case that Presley has.
-Speed up query even more.
-Show time prediction. "base on data created at <time>"
+SSL support properly with an authroized certificate.
+Logging in update script so we know if/where it fails.
+Locking on update to avoid running more than one at once.
