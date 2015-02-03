@@ -28,12 +28,6 @@ def application(environ, start_response):
         # inches = howmuchsnow.how_much_snow_gps((lat, lon), conn)
         # yield inches
         yield get_info(lat, lon)
-    elif 'ip' in parameters:
-        ip_addr = environ['REMOTE_ADDR']
-        lat, lon = ipv4_to_gps(ip_addr)
-        # inches = howmuchsnow.how_much_snow_ipv4(ip_addr, conn)
-        # yield inches
-        yield get_info(lat, lon)
     else:
         yield pages.homepage
 
