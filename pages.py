@@ -1,14 +1,3 @@
-def make_homepage (str_amount):
-    return """
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<body style="text-align: center; padding-top: 200px;">
-<a style="font-weight: bold; font-size: 120pt; font-family:Helvetica, sans-serif; text-decoration: none; color: black;">
-""" + str_amount + """
-</body>
-</html>
-    """
-
 homepage = """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
