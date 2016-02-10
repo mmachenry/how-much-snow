@@ -65,7 +65,7 @@ var geoPosition=function() {
         var pub = {};
         var provider=null;
         var u="undefined";
-        var ipGeolocationSrv = 'http://freegeoip.net/json/?callback=JSONPCallback';
+        var ipGeolocationSrv = '//freegeoip.net/json/?callback=JSONPCallback';
 
         pub.getCurrentPosition = function(success,error,opts)
         {

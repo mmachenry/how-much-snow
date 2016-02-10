@@ -34,8 +34,8 @@ homepage = """
       <a style="font-weight: bold; color: grey; text-decoration: none;" href="/?faq=1">More Information</a>
     </div>
 
-    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
-    <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 
     <script src="geoPosition.js"></script>
     <script src="howmuchsnow.js"></script>
