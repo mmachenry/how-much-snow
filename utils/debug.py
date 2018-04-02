@@ -1,8 +1,9 @@
 import sys
-sys.path.append("/home/mmachenry/src/HowMuchSnow")
+sys.path.append("/home/mmachenry/src/how-much-snow")
 from itertools import groupby
 import sqlalchemy as sa
 import howmuchsnow
+import config
 import pprint
 import numpy as np
 
@@ -16,7 +17,7 @@ places = {
 
 user_loc = places['mike']
 
-engine = sa.create_engine(howmuchsnow.DB)
+engine = sa.create_engine(config.DB)
 conn = engine.connect()
 
 print howmuchsnow.how_much_snow_gps(user_loc, conn)

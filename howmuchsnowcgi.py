@@ -4,11 +4,12 @@ from flup.server.fcgi import WSGIServer
 from cgi import parse_qs
 sys.path.append('/home/mmachenry/HowMuchSnow')
 import howmuchsnow
+import config
 import pages
 import sqlalchemy as sa
 import json
 
-engine = sa.create_engine(howmuchsnow.DB)
+engine = sa.create_engine(config.DB)
 conn = engine.connect()
 
 def get_info(lat, lon):

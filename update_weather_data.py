@@ -7,10 +7,9 @@ import shutil
 import csv
 import subprocess
 import sqlalchemy
+import config
 
 WGRIB_PROGRAM = "/home/ec2-user/grib2/wgrib2/wgrib2"
-DB_HOST = 'how-much-snow-db.cddoqpefvprn.us-east-1.rds.amazonaws.com'
-DB = 'postgresql://howmuchsnow:howmuchsnow@' + DB_HOST + '/howmuchsnow'
 SOURCE_FILE_REGEXP = "sref.t(03|09|15|21)z.pgrb212.mean_3hrly.grib2"
 MAX_CSV_CHUNK_SIZE = 100000
 
@@ -22,7 +21,7 @@ def main ():
     #print "Converting to CSV."
     filenames = convert_to_csv(temp_dir)
     #print "Connecting to DB."
-    connection = get_connection(DB)
+    connection = get_connection(config.DB)
     transaction = connection.begin()
     #print "Importing ", filenames
     do_db_import(connection, filenames)
@@ -77,7 +76,7 @@ def convert_to_csv (temp_dir):
     return processed_files
 
 def get_connection (db):
-    return sqlalchemy.create_engine(DB).connect()
+    return sqlalchemy.create_engine(config.DB).connect()
 
 def do_db_import (dbh, filenames):
     create_temp_table(dbh)
