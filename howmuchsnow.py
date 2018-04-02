@@ -1,7 +1,5 @@
 import sqlalchemy as sa
 
-DB = 'postgresql://howmuchsnow:howmuchsnow@localhost/howmuchsnow_test'
-
 def how_much_snow_gps (user_loc, conn):
     '''Takes a tuple of a user's estimated latitude and longitude, and a
     database connection. From the database, gets all rows for the nearest
