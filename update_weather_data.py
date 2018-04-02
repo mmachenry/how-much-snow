@@ -8,8 +8,9 @@ import csv
 import subprocess
 import sqlalchemy
 
-WGRIB_PROGRAM = "/home/mmachenry/wgrib2-v0.1.9.4/bin/wgrib2"
-DB = 'postgresql://howmuchsnow:howmuchsnow@localhost/howmuchsnow_test'
+WGRIB_PROGRAM = "/home/ec2-user/grib2/wgrib2/wgrib2"
+DB_HOST = 'how-much-snow-db.cddoqpefvprn.us-east-1.rds.amazonaws.com'
+DB = 'postgresql://howmuchsnow:howmuchsnow@' + DB_HOST + '/howmuchsnow'
 SOURCE_FILE_REGEXP = "sref.t(03|09|15|21)z.pgrb212.mean_3hrly.grib2"
 MAX_CSV_CHUNK_SIZE = 100000
 
