@@ -5,9 +5,10 @@ import Html exposing (Html, p, text)
 import Task
 import Geolocation
 import Json.Decode as Json
+import Json.Encode
 import Http
 
-apiInvokeUrl = "https://5k9uziwo8k.execute-api.us-east-1.amazonaws.com/prod/get-info"
+apiInvokeUrl = "https://oziaoyoi7f.execute-api.us-east-1.amazonaws.com/prod/prediction"
 
 main =
   Html.program {
@@ -29,8 +30,18 @@ type Msg =
     UpdateLocation (Result Geolocation.Error Geolocation.Location)
   | UpdateSnow (Result Http.Error SnowResult)
 
+testLocation = {
+  latitude = 42.401981,
+  longitude = -71.122687,
+  accuracy = 0,
+  altitude = Nothing,
+  movement = Nothing,
+  timestamp = 0
+  }
+
 init : (Model, Cmd Msg)
-init = (InitState, Task.attempt UpdateLocation Geolocation.now)
+--init = (InitState, Task.attempt UpdateLocation Geolocation.now)
+init = (InitState, getSnow testLocation)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
@@ -51,10 +62,9 @@ view model = case model of
 
 getSnow : Geolocation.Location -> Cmd Msg
 getSnow loc =
-  let url = apiInvokeUrl ++ "?"
-            ++ "lat=" ++ toString loc.latitude
-            ++ "&lon=" ++ toString loc.longitude
-  in Http.send UpdateSnow (Http.get url decodeSnow)
+  let url = apiInvokeUrl ++ "?lat=" ++ toString (loc.latitude) ++
+            "&lon=" ++ toString (loc.longitude)
+  in Http.send UpdateSnow (Http.get apiInvokeUrl decodeSnow)
 
 decodeSnow : Json.Decoder SnowResult
 decodeSnow =
