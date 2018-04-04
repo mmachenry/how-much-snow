@@ -8814,7 +8814,8 @@ var _user$project$Main$view = function (model) {
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
 };
-var _user$project$Main$apiInvokeUrl = 'https://5k9uziwo8k.execute-api.us-east-1.amazonaws.com/prod/get-info';
+var _user$project$Main$testLocation = {latitude: 42.401981, longitude: -71.122687, accuracy: 0, altitude: _elm_lang$core$Maybe$Nothing, movement: _elm_lang$core$Maybe$Nothing, timestamp: 0};
+var _user$project$Main$apiInvokeUrl = 'https://kl07852iak.execute-api.us-east-1.amazonaws.com/prod/snow';
 var _user$project$Main$Snow = function (a) {
 	return {ctor: 'Snow', _0: a};
 };
@@ -8843,21 +8844,23 @@ var _user$project$Main$getSnow = function (loc) {
 		_user$project$Main$apiInvokeUrl,
 		A2(
 			_elm_lang$core$Basics_ops['++'],
-			'?',
+			'?lat=',
 			A2(
 				_elm_lang$core$Basics_ops['++'],
-				'lat=',
+				_elm_lang$core$Basics$toString(loc.latitude),
 				A2(
 					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(loc.latitude),
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						'&lon=',
-						_elm_lang$core$Basics$toString(loc.longitude))))));
+					'&lon=',
+					_elm_lang$core$Basics$toString(loc.longitude)))));
 	return A2(
 		_elm_lang$http$Http$send,
 		_user$project$Main$UpdateSnow,
-		A2(_elm_lang$http$Http$get, url, _user$project$Main$decodeSnow));
+		A2(_elm_lang$http$Http$get, _user$project$Main$apiInvokeUrl, _user$project$Main$decodeSnow));
+};
+var _user$project$Main$init = {
+	ctor: '_Tuple2',
+	_0: _user$project$Main$InitState,
+	_1: _user$project$Main$getSnow(_user$project$Main$testLocation)
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
@@ -8894,16 +8897,11 @@ var _user$project$Main$update = F2(
 			}
 		}
 	});
+var _user$project$Main$main = _elm_lang$html$Html$program(
+	{init: _user$project$Main$init, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions, view: _user$project$Main$view})();
 var _user$project$Main$UpdateLocation = function (a) {
 	return {ctor: 'UpdateLocation', _0: a};
 };
-var _user$project$Main$init = {
-	ctor: '_Tuple2',
-	_0: _user$project$Main$InitState,
-	_1: A2(_elm_lang$core$Task$attempt, _user$project$Main$UpdateLocation, _elm_lang$geolocation$Geolocation$now)
-};
-var _user$project$Main$main = _elm_lang$html$Html$program(
-	{init: _user$project$Main$init, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions, view: _user$project$Main$view})();
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
