@@ -1,5 +1,3 @@
-import sys
-sys.path.append("/home/mmachenry/src/how-much-snow")
 from itertools import groupby
 import sqlalchemy as sa
 import howmuchsnow
