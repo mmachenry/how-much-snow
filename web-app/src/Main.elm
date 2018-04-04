@@ -7,7 +7,7 @@ import Geolocation
 import Json.Decode as Json
 import Http
 
-apiInvokeUrl = "https://5k9uziwo8k.execute-api.us-east-1.amazonaws.com/prod/get-info"
+apiInvokeUrl = "https://oziaoyoi7f.execute-api.us-east-1.amazonaws.com/prod/prediction"
 
 main =
   Html.program {
@@ -51,8 +51,8 @@ view model = case model of
 
 getSnow : Geolocation.Location -> Cmd Msg
 getSnow loc =
-  let url = apiInvokeUrl ++ "?"
-            ++ "lat=" ++ toString loc.latitude
+  let url = apiInvokeUrl
+            ++ "?lat=" ++ toString loc.latitude
             ++ "&lon=" ++ toString loc.longitude
   in Http.send UpdateSnow (Http.get url decodeSnow)
 

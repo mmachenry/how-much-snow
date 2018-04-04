@@ -8814,7 +8814,7 @@ var _user$project$Main$view = function (model) {
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
 };
-var _user$project$Main$apiInvokeUrl = 'https://5k9uziwo8k.execute-api.us-east-1.amazonaws.com/prod/get-info';
+var _user$project$Main$apiInvokeUrl = 'https://oziaoyoi7f.execute-api.us-east-1.amazonaws.com/prod/prediction';
 var _user$project$Main$Snow = function (a) {
 	return {ctor: 'Snow', _0: a};
 };
@@ -8843,17 +8843,14 @@ var _user$project$Main$getSnow = function (loc) {
 		_user$project$Main$apiInvokeUrl,
 		A2(
 			_elm_lang$core$Basics_ops['++'],
-			'?',
+			'?lat=',
 			A2(
 				_elm_lang$core$Basics_ops['++'],
-				'lat=',
+				_elm_lang$core$Basics$toString(loc.latitude),
 				A2(
 					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(loc.latitude),
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						'&lon=',
-						_elm_lang$core$Basics$toString(loc.longitude))))));
+					'&lon=',
+					_elm_lang$core$Basics$toString(loc.longitude)))));
 	return A2(
 		_elm_lang$http$Http$send,
 		_user$project$Main$UpdateSnow,
