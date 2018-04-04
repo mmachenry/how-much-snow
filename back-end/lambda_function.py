@@ -6,8 +6,8 @@ engine = sa.create_engine(config.DB)
 conn = engine.connect()
 
 def lambda_handler(event, context):
-    lat = event['lat']
-    lon = event['lon']
+    lat = event['queryStringParameters']['lat']
+    lon = event['queryStringParameters']['lon']
 
     user_object = {
         'inches': how_much_snow_gps((lat, lon), conn),
