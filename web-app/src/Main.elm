@@ -63,9 +63,9 @@ update msg model = case msg of
 getSnow : Geolocation.Location -> Cmd Msg
 getSnow loc =
   let url = apiInvokeUrl
-              ++ "?lat=" ++ toString (loc.latitude)
-              ++ "&lon=" ++ toString (loc.longitude)
-  in Http.send UpdateSnow (Http.get apiInvokeUrl decodeSnow)
+            ++ "?lat=" ++ toString loc.latitude
+            ++ "&lon=" ++ toString loc.longitude
+  in Http.send UpdateSnow (Http.get url decodeSnow)
 
 decodeSnow : Json.Decoder SnowResult
 decodeSnow =
