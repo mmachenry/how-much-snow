@@ -40,12 +40,15 @@ function animateDots() {
 
 $(function (){
     setInterval(animateDots, 600);
-
-    if (geoPosition.init()) {
-        geoPosition.getCurrentPosition(useGeolocation, onDenied);
-    }
-    else {
-        $("#snow").html("Sorry, we can't get your location.");
+    if (0) { 
+        useGeolocation ({ coords : { latitude : 42, longitude : -71 } });
+    } else {
+        if (geoPosition.init()) {
+            geoPosition.getCurrentPosition(useGeolocation, onDenied);
+        }
+        else {
+            $("#snow").html("Sorry, we can't get your location.");
+        }
     }
 });
 
