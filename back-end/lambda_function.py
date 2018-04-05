@@ -1,4 +1,31 @@
 import sqlalchemy as sa
+import json
+import config
+
+engine = sa.create_engine(config.DB)
+conn = engine.connect()
+
+def lambda_handler(event, context):
+    lat = event['queryStringParameters']['lat']
+    lon = event['queryStringParameters']['lon']
+
+    user_object = {
+        'inches': how_much_snow_gps((lat, lon), conn),
+        'coords': make_coordinates(lat, lon)
+    }
+
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+             # Required for CORS support to work
+            "Access-Control-Allow-Origin" : "*",
+             # Required for cookies, authorization headers with HTTPS
+            "Access-Control-Allow-Credentials" : True
+        },
+        'body': json.dumps(user_object)
+    }
+
 
 def how_much_snow_gps (user_loc, conn):
     '''Takes a tuple of a user's estimated latitude and longitude, and a
@@ -10,8 +37,9 @@ def how_much_snow_gps (user_loc, conn):
     return format_amount(inches_of_snow)
 
 def get_from_db ((latitude, longitude), conn):
-    '''Given user coordinates and a database connection, get the weighted average
-    by distance squared of all of the nearby stations. Returns amount of snow in inches.
+    '''Given user coordinates and a database connection, get the weighted
+       average by distance squared of all of the nearby stations. Returns
+       amount of snow in inches.
     '''
     query = sa.text('''
         select
