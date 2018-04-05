@@ -10,7 +10,9 @@ Installation
 ---
 
     virtualenv env
+    env/bin/activate
     pip install sqlalchemy psycopg2
+    deactivate
     zip deploy.zip lambda_function.py config.py
     cd env/lib/python2.7/site-packages/
     zip -ur ../../../../deploy.zip *
