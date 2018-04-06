@@ -1,3 +1,0 @@
-SSL support properly with an authroized certificate.
-Logging in update script so we know if/where it fails.
-Locking on update to avoid running more than one at once.
