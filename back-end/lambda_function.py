@@ -33,10 +33,11 @@ def get_from_db ((latitude, longitude), conn):
     '''
     query = sa.text('''
         select
-            sum(influence * msnow) / sum (influence)
+            sum(influence * msnow * timeremainingratio) / sum (influence)
         from (
             select
                 1 / distance(latitude, longitude, :lat, :lon)^2 influence,
+                least(extract(epoch from prediction.predictedfor - now()) / (60*60*3), 1) timeremainingratio,
                 sum ( metersofsnow ) msnow
             from
                 prediction
