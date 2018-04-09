@@ -7,6 +7,7 @@ import Geolocation
 import Json.Decode as Json
 import Json.Encode
 import Http
+import Maybe.Extra exposing (isNothing)
 
 apiInvokeUrl = "https://oziaoyoi7f.execute-api.us-east-1.amazonaws.com/prod/prediction"
 
@@ -28,6 +29,7 @@ type Msg =
     UpdateLocation (Result Geolocation.Error Geolocation.Location)
   | UpdateSnow (Result Http.Error Float)
 
+{-
 spoofMessage : msg -> Cmd msg
 spoofMessage msg =
   Task.succeed msg
@@ -41,12 +43,13 @@ testLocation = {
   movement = Nothing,
   timestamp = 0
   }
+-}
 
 initState = { location = Nothing, prediction = Nothing, errorMessage = Nothing}
 
 init : (Model, Cmd Msg)
---init = (initState, Task.attempt UpdateLocation Geolocation.now)
-init = (initState, spoofMessage (UpdateLocation (Ok testLocation)))
+init = (initState, Task.attempt UpdateLocation Geolocation.now)
+--init = (initState, spoofMessage (UpdateLocation (Ok testLocation)))
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
@@ -69,14 +72,16 @@ decodeSnow = Json.field "meters" Json.float
 
 view : Model -> Html Msg
 view model =
-  div [style [("text-align", "left"),
+  div [style [("text-align", if isNothing model.prediction
+                             then "left" else "center"),
               ("padding-top", "200px"),
               ("padding-left", "100px"),
               ("padding-right", "100px")]]
       [(case model.errorMessage of
           Just str -> p [] [text str]
           Nothing -> span [style [("font-weight", "bold"),
-                                  ("font-size", "80pt"),
+                                  ("font-size", if isNothing model.prediction
+                                                then "80pt" else "120pt"),
                                   ("font-family", "Helvetica, sans-serif"),
                                   ("text-decoration", "none"),
                                   ("color", "black")]]
@@ -85,11 +90,17 @@ view model =
                              Just _ ->
                                case model.prediction of
                                  Nothing -> [text "Getting prediction..."]
-                                 Just p -> [text (toString p)])),
+                                 Just p -> [ displayPrediction p ])),
         footer model]
 
+displayPrediction : Float -> Html Msg
+displayPrediction meters =
+    let inches = round (meters * 39.3701)
+        unitWord = if inches == 1 then "inch" else "inches"
+    in text (toString inches ++ " " ++ unitWord)
+
 footer model =
-  div [style [("position", "fixed"), ("right", "15px"), ("bottom", "150px")]]
+  div [style [("position", "fixed"), ("right", "15px"), ("bottom", "15px")]]
       [ footerLocation model, text " | ", faqLink ]
 
 faqLink =
