@@ -20,15 +20,13 @@ main =
 
 type alias Model = {
   location : Maybe Geolocation.Location,
-  prediction : Maybe SnowResult,
+  prediction : Maybe Float,
   errorMessage : Maybe String
   }
 
-type SnowResult = SnowResult String String
-
 type Msg =
     UpdateLocation (Result Geolocation.Error Geolocation.Location)
-  | UpdateSnow (Result Http.Error SnowResult)
+  | UpdateSnow (Result Http.Error Float)
 
 spoofMessage : msg -> Cmd msg
 spoofMessage msg =
@@ -50,7 +48,6 @@ init : (Model, Cmd Msg)
 --init = (initState, Task.attempt UpdateLocation Geolocation.now)
 init = (initState, spoofMessage (UpdateLocation (Ok testLocation)))
 
--- TODO don't lose location when snow error happens
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
   UpdateLocation (Ok loc) -> ({model | location = Just loc}, getSnow loc)
@@ -67,11 +64,8 @@ getSnow loc =
             ++ "&lon=" ++ toString loc.longitude
   in Http.send UpdateSnow (Http.get url decodeSnow)
 
-decodeSnow : Json.Decoder SnowResult
-decodeSnow =
-  Json.map2 SnowResult
-    (Json.field "coords" Json.string)
-    (Json.field "inches" Json.string)
+decodeSnow : Json.Decoder Float
+decodeSnow = Json.field "meters" Json.float
 
 view : Model -> Html Msg
 view model =
@@ -95,16 +89,14 @@ view model =
         footer model]
 
 footer model =
-  div [style [("position", "fixed"),
-              ("right", "15px"),
-              ("bottom", "15px")]]
-      [ footerLocation model,
-        text " | ",
-        a [style [("font-weight", "bold"),
-                  ("color", "grey"),
-                  ("text-decoration", "none")],
-           href "/?faq=1"]
-          [text "More Information"]]
+  div [style [("position", "fixed"), ("right", "15px"), ("bottom", "150px")]]
+      [ footerLocation model, text " | ", faqLink ]
+
+faqLink =
+  a [style [("font-weight", "bold"), ("color", "grey"),
+            ("text-decoration", "none")],
+     href "faq.html"]
+    [text "More Information"]
 
 footerLocation model =
   span [style [("color", "grey"), ("text-decoration", "none")]]
@@ -115,48 +107,6 @@ footerLocation model =
                lon = toString loc.longitude
            in [ text "Assuming you're near ",
                 a [href ("https://www.google.com/maps?q="
-                        ++ toString loc.latitude ++ "," -- maybe %2C
+                        ++ toString loc.latitude ++ ","
                         ++ toString loc.longitude)]
                   [text <| lat ++ "°N " ++ lon ++ "°W"]])
-
--- TODO account for this on the FAQ page
-{-
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <style type="text/css">
-    p.q {font-weight:bold;}
-    a {text-decoration:underline;
-      color: black;}
-    body {text-align: left;
-          padding-left: 200px;
-          padding-bottom: 50px;
-          padding-top: 50px;}
--}
-
-faq : Html Msg
-faq = div [] (List.map qAndA [
-  ("Who made this site?",
-   [a [href "http://xkcd.com/"] [ text "Randall Munroe"], text ", ", a [href "https://github.com/mmachenry/"] [ text "Mike MacHenry" ], text ", and ", a [href "https://github.com/presleyp/"] [text "Presley Pizzo" ]]),
-  ("What does the number represent?",
-   [text "The predicted accumulation in your area from the largest snowstorm you're expected to get during the next few days."]),
-  ("Where do these forecasts come from?",
-   [text "The US National Weather Service's ", a [href "http://www.hpc.ncep.noaa.gov/wwd/impactgraphics/"] [text "Short-Range Ensemble Forecast"], text " model."]),
-  ("What if you got my location wrong?",
-   [text "Sorry :("]),
-  ("What if I want to see the forecast for a different location?",
-   [text "Use a ", a [href "http://www.hpc.ncep.noaa.gov/wwd/winter_wx.shtml"] [ text "real weather site"], text "."]),
-  ("What if I live outside the US?",
-   [text "Use a real weather site."]),
-  ("How can I find out when the snow is supposed to start?",
-   [text "Use a real weather site."]),
-  ("What if I want to see the forecast for a specific day?",
-   [text "Use a real weather site."]),
-  ("What if I want to know how much rain or ice I'm going to get?",
-   [text "Use a real weather site."]),
-  ("What if I want to know how many people are in space right now?",
-   [text "Use ", a [href "http://www.howmanypeopleareinspacerightnow.com"] [text "How Many People Are In Space Right Now?"], text "."])
-  ])
-
-qAndA (question,answer) = div [] [
-  p [ style [("font-weight", "bold")] ] [text "Q. ", text question ],
-  p [ style [] ] (text "A. " :: answer)
-  ]
