@@ -46,6 +46,7 @@ def get_from_db ((latitude, longitude), conn):
             where
                 distance(latitude, longitude, :lat, :lon) < 50
             group by
+                predictedfor,
                 latitude,
                 longitude
             ) aggregate
