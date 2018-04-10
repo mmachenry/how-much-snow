@@ -25,7 +25,6 @@ def lambda_handler(event, context):
         'body': json.dumps(user_object)
     }
 
-
 def get_from_db ((latitude, longitude), conn):
     '''Given user coordinates and a database connection, get the weighted
        average by distance squared of all of the nearby stations. Returns
@@ -33,12 +32,11 @@ def get_from_db ((latitude, longitude), conn):
     '''
     query = sa.text('''
         select
-            sum(influence * msnow * timeremainingratio) / sum (influence)
+            sum(influence * msnow) / sum (influence)
         from (
             select
                 1 / distance(latitude, longitude, :lat, :lon)^2 influence,
-                least(extract(epoch from prediction.predictedfor - now()) / (60*60*3), 1) timeremainingratio,
-                sum ( metersofsnow ) msnow
+                sum ( metersofsnow * least(extract(epoch from prediction.predictedfor - now()) / (60*60*3), 1) ) msnow
             from
                 prediction
             join
@@ -46,7 +44,6 @@ def get_from_db ((latitude, longitude), conn):
             where
                 distance(latitude, longitude, :lat, :lon) < 50
             group by
-                predictedfor,
                 latitude,
                 longitude
             ) aggregate
