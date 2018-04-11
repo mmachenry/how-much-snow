@@ -72,8 +72,7 @@ decodeSnow = Json.field "meters" Json.float
 
 view : Model -> Html Msg
 view model =
-  div [style [("text-align", if isNothing model.prediction
-                             then "left" else "center"),
+  div [style [("text-align", "center"),
               ("padding-top", "200px"),
               ("padding-left", "100px"),
               ("padding-right", "100px")]]
