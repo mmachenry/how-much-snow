@@ -6,7 +6,7 @@ function that acts as the implementation for the REST API to get weather
 predictions as well as a cron job script to pull prediction data from NOAA,
 parse it, and put it into the database.
 
-Installation
+Installation of Lambda API
 ---
 
     virtualenv env
@@ -17,3 +17,13 @@ Installation
     cd env/lib/python2.7/site-packages/
     zip -ur ../../../../deploy.zip *
     # Copy the zip file up to the lambda function in AWS console
+
+Installation of Docker backend
+---
+
+    docker build -t how-much-snow-update .
+    eval $(aws ecr get-login --no-include-email --region us-east-1)
+    docker tag how-much-snow-update:latest 221691463461.dkr.ecr.us-east-1.amazonaws.com/how-much-snow-update:latest
+    docker push 221691463461.dkr.ecr.us-east-1.amazonaws.com/how-much-snow-update:latest
+
+
