@@ -9294,6 +9294,13 @@ var _elm_lang$http$Http$StringPart = F2(
 		return {ctor: 'StringPart', _0: a, _1: b};
 	});
 var _elm_lang$http$Http$stringPart = _elm_lang$http$Http$StringPart;
+var _mmachenry$how_much_snow$Main$roundTo = F2(
+	function (d, r) {
+		var order = _elm_lang$core$Basics$toFloat(
+			Math.pow(10, d));
+		return _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$round(r * order)) / order;
+	});
 var _mmachenry$how_much_snow$Main$footerLocation = function (model) {
 	return A2(
 		_elm_lang$html$Html$span,
@@ -9321,8 +9328,10 @@ var _mmachenry$how_much_snow$Main$footerLocation = function (model) {
 				};
 			} else {
 				var _p1 = _p0._0;
-				var lon = _elm_lang$core$Basics$toString(_p1.longitude);
-				var lat = _elm_lang$core$Basics$toString(_p1.latitude);
+				var lon = _elm_lang$core$Basics$toString(
+					A2(_mmachenry$how_much_snow$Main$roundTo, 5, _p1.longitude));
+				var lat = _elm_lang$core$Basics$toString(
+					A2(_mmachenry$how_much_snow$Main$roundTo, 5, _p1.latitude));
 				return {
 					ctor: '::',
 					_0: _elm_lang$html$Html$text('Assuming you\'re near '),

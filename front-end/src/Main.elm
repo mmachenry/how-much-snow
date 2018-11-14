@@ -1,4 +1,4 @@
-module Main exposing (main)
+module Main exposing (..)
 
 import Html exposing (Html, p, text, div, a, span)
 import Html.Attributes exposing (style, href)
@@ -113,10 +113,15 @@ footerLocation model =
        (case model.location of
          Nothing -> [text ""]
          Just loc ->
-           let lat = toString loc.latitude
-               lon = toString loc.longitude
+           let lat = toString (roundTo 5 loc.latitude)
+               lon = toString (roundTo 5 loc.longitude)
            in [ text "Assuming you're near ",
                 a [href ("https://www.google.com/maps?q="
                         ++ toString loc.latitude ++ ","
                         ++ toString loc.longitude)]
                   [text <| lat ++ "°N " ++ lon ++ "°W"]])
+
+roundTo : Int -> Float -> Float
+roundTo d r =
+  let order = toFloat (10^d)
+  in toFloat (round (r * order)) / order
