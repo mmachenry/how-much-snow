@@ -6,5 +6,5 @@ This is the web front end to how-much-snow. It is a single-page application that
 Installation
 ---
 
-    elm-make --output ../docs/index.html src/Main.elm
-    aws s3 sync ../docs/ s3://mmachenry-how-much-snow
+    elm-make --output html/main.js src/Main.elm
+    aws s3 sync html/ s3://mmachenry-how-much-snow
