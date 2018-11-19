@@ -59,20 +59,18 @@ view model = div [] [ mainText model, footer model]
 mainText model = case model.errorMessage of
   Just str -> displayError str
   Nothing ->
-    div [style [("display", "flex"),
-                ("height", "100vh"),
-                ("justify-content", "center"),
-                ("align-items", "center")]] [
-      span [style [("font-weight", "bold"),
-                   ("font-family", "Helvetica, sans-serif"),
-                   ("text-decoration", "none"),
-                   ("color", "black")]] [
-           case model.location of
-              Nothing -> pendingMessage "Getting your location..."
-              Just _ ->
-                case model.prediction of
-                  Nothing -> pendingMessage "Getting prediction..."
-                  Just p -> displayPrediction p ]]
+    div [style [("font-weight", "bold"),
+                ("font-family", "Helvetica, sans-serif"),
+                ("text-decoration", "none"),
+                ("color", "black"),
+                ("text-align", "center"),
+                ("line-height", "80vh")]] [
+      case model.location of
+        Nothing -> pendingMessage "Getting your location..."
+        Just _ ->
+          case model.prediction of
+            Nothing -> pendingMessage "Getting prediction..."
+            Just p -> displayPrediction p ]
 
 displayError : String -> Html Msg
 displayError message = p [] [text message]
