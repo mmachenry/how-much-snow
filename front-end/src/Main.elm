@@ -29,27 +29,10 @@ type Msg =
     UpdateLocation (Result Geolocation.Error Geolocation.Location)
   | UpdateSnow (Result Http.Error Float)
 
-{-
-spoofMessage : msg -> Cmd msg
-spoofMessage msg =
-  Task.succeed msg
-  |> Task.perform identity
-
-testLocation = {
-  latitude = 42.401981,
-  longitude = -71.122687,
-  accuracy = 0,
-  altitude = Nothing,
-  movement = Nothing,
-  timestamp = 0
-  }
--}
-
 initState = { location = Nothing, prediction = Nothing, errorMessage = Nothing}
 
 init : (Model, Cmd Msg)
 init = (initState, Task.attempt UpdateLocation Geolocation.now)
---init = (initState, spoofMessage (UpdateLocation (Ok testLocation)))
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
@@ -71,35 +54,44 @@ decodeSnow : Json.Decoder Float
 decodeSnow = Json.field "meters" Json.float
 
 view : Model -> Html Msg
-view model =
-  div [style [("text-align", "center"),
-              ("padding-top", "200px"),
-              ("padding-left", "100px"),
-              ("padding-right", "100px")]]
-      [(case model.errorMessage of
-          Just str -> p [] [text str]
-          Nothing -> span [style [("font-weight", "bold"),
-                                  ("font-size", if isNothing model.prediction
-                                                then "80pt" else "120pt"),
-                                  ("font-family", "Helvetica, sans-serif"),
-                                  ("text-decoration", "none"),
-                                  ("color", "black")]]
-                          (case model.location of
-                             Nothing -> [text "Getting your location..."]
-                             Just _ ->
-                               case model.prediction of
-                                 Nothing -> [text "Getting prediction..."]
-                                 Just p -> [ displayPrediction p ])),
-        footer model]
+view model = div [] [ mainText model, footer model]
+
+mainText model = case model.errorMessage of
+  Just str -> displayError str
+  Nothing ->
+    div [style [("display", "flex"),
+                ("height", "100vh"),
+                ("justify-content", "center"),
+                ("align-items", "center")]] [
+      span [style [("font-weight", "bold"),
+                   ("font-family", "Helvetica, sans-serif"),
+                   ("text-decoration", "none"),
+                   ("color", "black")]] [
+           case model.location of
+              Nothing -> pendingMessage "Getting your location..."
+              Just _ ->
+                case model.prediction of
+                  Nothing -> pendingMessage "Getting prediction..."
+                  Just p -> displayPrediction p ]]
+
+displayError : String -> Html Msg
+displayError message = p [] [text message]
+
+pendingMessage : String -> Html Msg
+pendingMessage message = span [style [("font-size", "8vw")]] [text message]
 
 displayPrediction : Float -> Html Msg
 displayPrediction meters =
     let inches = round (meters * 39.3701)
         unitWord = if inches == 1 then "inch" else "inches"
-    in text (toString inches ++ " " ++ unitWord)
+    in span [style [("font-size", "18vw")]]
+                   [text (toString inches ++ " " ++ unitWord)]
 
 footer model =
-  div [style [("position", "fixed"), ("right", "15px"), ("bottom", "15px")]]
+  div [style [("position", "fixed"),
+              ("right", "2vw"),
+              ("bottom", "2vw"),
+              ("font-size", "3vw")]]
       [ footerLocation model, text " | ", faqLink ]
 
 faqLink =
