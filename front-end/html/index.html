@@ -14,8 +14,9 @@
 
     <script src="main.js"></script>
     <script>
+        var urlParams = new URLSearchParams(window.location.search);
         var node = document.getElementById("app");
-        var app = Elm.Main.embed(node);
+        var app = Elm.Main.embed(node, { "debug" : urlParams.has('debug') } );
     </script>
 </body>
 

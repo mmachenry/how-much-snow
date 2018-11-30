@@ -9,12 +9,12 @@ parse it, and put it into the database.
 Installation of Lambda API
 ---
 
-    virtualenv env
-    env/bin/activate
-    pip install sqlalchemy psycopg2
+    virtualenv --python `which python3` venv
+    source venv/bin/activate
+    pip install sqlalchemy psycopg2-binary simplejson
     deactivate
     zip deploy.zip lambda_function.py config.py
-    cd env/lib/python2.7/site-packages/
+    cd venv/lib/python3.6/site-packages/
     zip -ur ../../../../deploy.zip *
     # Copy the zip file up to the lambda function in AWS console
 
