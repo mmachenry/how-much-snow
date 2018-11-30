@@ -217,7 +217,12 @@ def merge_prediction_data (dbh):
 
 
 def remove_old_predictions(dbh):
-    dbh.execute("delete from prediction where predictedfor < now()")
+    dbh.execute("""
+        delete from
+            prediction
+        where
+            predictedfor < now() - interval '3' hour
+    """)
 
 if __name__ == "__main__":
     main()
