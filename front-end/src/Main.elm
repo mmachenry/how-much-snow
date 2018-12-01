@@ -133,14 +133,9 @@ influence datum = 1 / datum.distance^2
 
 timeLeft : DateTime -> PredictionDatum -> Float
 timeLeft now prediction =
-  let delta = Time.DateTime.delta now prediction.predictedfor
-      minutes = delta.days * 24*60 + delta.hours * 60 + delta.minutes
+  let timeDelta = Time.DateTime.delta now prediction.predictedfor
       threeHours = 3*60
-  in if minutes <= 0
-     then 1
-     else if minutes > threeHours
-          then 0
-          else 1 - toFloat minutes / threeHours
+  in min 1 (max 0 (1 - toFloat timeDelta.minutes / threeHours))
 
 weightPrediction : (PredictionDatum, Float, Float) -> Float
 weightPrediction (datum, influence, timeRatio) =
