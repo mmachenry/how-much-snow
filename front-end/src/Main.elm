@@ -35,7 +35,6 @@ type alias Flags = {
   }
 
 type alias PredictionData = {
-  meters : Float,
   data : List PredictionDatum
   }
 
@@ -79,9 +78,8 @@ getSnow loc =
 
 decodeSnow : Json.Decoder PredictionData
 decodeSnow =
-  Json.map2
+  Json.map
     PredictionData
-      (Json.field "meters" Json.float)
       (Json.field "data" decodeData)
 
 decodeData : Json.Decoder (List PredictionDatum)
@@ -165,7 +163,12 @@ mainText model = case model.errorMessage of
         Just loc ->
           case model.prediction of
             Nothing -> pendingMessage "Getting prediction..."
-            Just p -> displayPrediction p.meters
+            Just prediction ->
+              if List.length prediction.data == 0
+              then displayOutOfRangeError model
+              else let now = Time.DateTime.fromTimestamp loc.timestamp
+                       metersofsnow = howMuchSnow now prediction.data
+                   in displayPrediction metersofsnow
       ]
 
 debugView : Model -> Html Msg
@@ -213,6 +216,9 @@ tableRow (prediction, influence, timeLeft) =
 
 show : Model -> Html Msg
 show model = div [] [ text (toString model) ]
+
+displayOutOfRangeError : Model -> Html Msg
+displayOutOfRangeError model = div [] [ text "You're out of range." ]
 
 displayError : String -> Html Msg
 displayError message = p [] [text message]
