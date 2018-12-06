@@ -126,6 +126,8 @@ def read_csv_rows (filename):
                 yield rows
                 rows = []
                 chunk_size = 0
+        if chunk_size > 0:
+            yield rows
 
 def csv_row_to_values (row):
     return "(" + ",".join([
