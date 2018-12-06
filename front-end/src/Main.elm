@@ -24,9 +24,8 @@ main =
   }
 
 type alias Model = {
-  location : Maybe Geolocation.Location,
-  prediction : Maybe PredictionData,
-  errorMessage : Maybe String,
+  location : Maybe (Result Geolocation.Error Geolocation.Location),
+  prediction : Maybe (Result Http.Error PredictionData),
   debug : Bool
   }
 
@@ -53,7 +52,6 @@ type Msg =
 initState flags = {
   location = Nothing,
   prediction = Nothing,
-  errorMessage = Nothing,
   debug = flags.debug
   }
 
@@ -62,12 +60,26 @@ init flags = (initState flags, Task.attempt UpdateLocation Geolocation.now)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-  UpdateLocation (Ok loc) -> ({model | location = Just loc}, getSnow loc)
-  UpdateLocation (Err err) ->
-    ({model | errorMessage = Just (toString err)}, Cmd.none)
-  UpdateSnow (Ok x) -> ({model | prediction = Just x}, Cmd.none)
-  UpdateSnow (Err err) ->
-    ({model | errorMessage = Just (toString err)}, Cmd.none)
+  UpdateLocation result -> (
+    {model | location = Just result},
+    case result of
+      Ok loc -> getSnow loc
+      Err err -> Cmd.none)
+  -- UpdateSnow (Err _) -> ({model|prediction =(Just (Ok {data=[]}))}, Cmd.none)
+  UpdateSnow (Err _) -> ({model|prediction =(Just (Ok (fakeData model.location)))}, Cmd.none)
+  UpdateSnow result -> ({model | prediction = Just result}, Cmd.none)
+
+fakeData : Maybe (Result Geolocation.Error Geolocation.Location) -> PredictionData
+fakeData l = case l of
+  Just (Ok loc) -> {
+  data=[{
+    latitude=loc.latitude,
+    longitude=loc.longitude,
+    distance=0,
+    metersofsnow=1,
+    predictedfor=Time.DateTime.fromTimestamp loc.timestamp}]}
+  Just (Err _) -> {data=[]}
+  Nothing -> {data=[]}
 
 getSnow : Geolocation.Location -> Cmd Msg
 getSnow loc =
@@ -77,10 +89,7 @@ getSnow loc =
   in Http.send UpdateSnow (Http.get url decodeSnow)
 
 decodeSnow : Json.Decoder PredictionData
-decodeSnow =
-  Json.map
-    PredictionData
-      (Json.field "data" decodeData)
+decodeSnow = Json.map PredictionData (Json.field "data" decodeData)
 
 decodeData : Json.Decoder (List PredictionDatum)
 decodeData = Json.list decodePredictionDatum
@@ -147,38 +156,92 @@ view : Model -> Html Msg
 view model =
   if model.debug
   then debugView model
-  else div [] [ mainText model, footer model]
+  else normalView model
 
-mainText model = case model.errorMessage of
-  Just str -> displayError str
-  Nothing ->
-    div [style [("font-weight", "bold"),
-                ("font-family", "Helvetica, sans-serif"),
-                ("text-decoration", "none"),
-                ("color", "black"),
-                ("text-align", "center"),
-                ("line-height", "80vh")]] [
-      case model.location of
-        Nothing -> pendingMessage "Getting your location..."
-        Just loc ->
-          case model.prediction of
-            Nothing -> pendingMessage "Getting prediction..."
-            Just prediction ->
-              if List.length prediction.data == 0
-              then displayOutOfRangeError model
-              else let now = Time.DateTime.fromTimestamp loc.timestamp
+normalView model = div [] [
+  div [style [("font-weight", "bold"),
+              ("font-family", "Helvetica, sans-serif"),
+              ("text-decoration", "none"),
+              ("color", "black"),
+              ("text-align", "center"),
+              ("line-height", "80vh")]] [
+    case model.location of
+      Nothing -> pendingMessage "Getting your location..."
+      Just (Err err) -> errorMessage "No location available."
+      Just (Ok loc) ->
+        case model.prediction of
+          Nothing -> pendingMessage "Getting prediction..."
+          Just (Err err) -> errorMessage "Unable to get prediction data."
+          Just (Ok prediction) ->
+            case prediction.data of
+              [] -> errorMessage "You are out of range."
+              _ -> let now = Time.DateTime.fromTimestamp loc.timestamp
                        metersofsnow = howMuchSnow now prediction.data
-                   in displayPrediction metersofsnow
-      ]
+                    in displayPrediction metersofsnow],
+    footer model
+  ]
+
+errorMessage : String -> Html Msg
+errorMessage message = div [] [ text message ]
+
+pendingMessage : String -> Html Msg
+pendingMessage message = span [style [("font-size", "8vw")]] [text message]
+
+displayPrediction : Float -> Html Msg
+displayPrediction meters =
+    let inches = round (meters * 39.3701)
+        unitWord = if inches == 1 then "inch" else "inches"
+    in span [style [("font-size", "18vw")]]
+                   [text (toString inches ++ " " ++ unitWord)]
+
+footer model =
+  div [style [("position", "fixed"),
+              ("right", "2vw"),
+              ("bottom", "2vw"),
+              ("font-size", "3vw")]]
+      [ footerLocation model, faqLink ]
+
+footerLocation model =
+  span [style [("color", "grey"), ("text-decoration", "none")]]
+       (case model.location of
+         Nothing -> [text ""]
+         Just (Err _) -> [text ""]
+         Just (Ok loc) ->
+           let lat = toString (roundTo 5 loc.latitude)
+               lon = toString (roundTo 5 loc.longitude)
+           in [ text "Assuming you're near ",
+                a [href ("https://www.google.com/maps?q="
+                        ++ toString loc.latitude ++ ","
+                        ++ toString loc.longitude)]
+                  [text <| lat ++ "°N " ++ lon ++ "°W"],
+                text " | "])
+
+faqLink =
+  a [style [("font-weight", "bold"),
+            ("color", "grey"),
+            ("text-decoration", "none")],
+     href "faq.html"]
+    [text "More Information"]
+
+roundTo : Int -> Float -> Float
+roundTo d r =
+  let order = toFloat (10^d)
+  in toFloat (round (r * order)) / order
+
+----------------
+-- Debug view --
+----------------
 
 debugView : Model -> Html Msg
 debugView model =
   case model.location of
     Nothing -> show model
-    Just loc ->
+    Just (Err _) -> show model
+    Just (Ok loc) ->
       case model.prediction of
         Nothing -> show model
-        Just p ->
+        Just (Err _) -> show model
+        Just (Ok p) ->
           let now = Time.DateTime.fromTimestamp loc.timestamp
           in div [] [
                h1 [] [ text "Total" ],
@@ -216,50 +279,3 @@ tableRow (prediction, influence, timeLeft) =
 
 show : Model -> Html Msg
 show model = div [] [ text (toString model) ]
-
-displayOutOfRangeError : Model -> Html Msg
-displayOutOfRangeError model = div [] [ text "You're out of range." ]
-
-displayError : String -> Html Msg
-displayError message = p [] [text message]
-
-pendingMessage : String -> Html Msg
-pendingMessage message = span [style [("font-size", "8vw")]] [text message]
-
-displayPrediction : Float -> Html Msg
-displayPrediction meters =
-    let inches = round (meters * 39.3701)
-        unitWord = if inches == 1 then "inch" else "inches"
-    in span [style [("font-size", "18vw")]]
-                   [text (toString inches ++ " " ++ unitWord)]
-
-footer model =
-  div [style [("position", "fixed"),
-              ("right", "2vw"),
-              ("bottom", "2vw"),
-              ("font-size", "3vw")]]
-      [ footerLocation model, text " | ", faqLink ]
-
-faqLink =
-  a [style [("font-weight", "bold"), ("color", "grey"),
-            ("text-decoration", "none")],
-     href "faq.html"]
-    [text "More Information"]
-
-footerLocation model =
-  span [style [("color", "grey"), ("text-decoration", "none")]]
-       (case model.location of
-         Nothing -> [text ""]
-         Just loc ->
-           let lat = toString (roundTo 5 loc.latitude)
-               lon = toString (roundTo 5 loc.longitude)
-           in [ text "Assuming you're near ",
-                a [href ("https://www.google.com/maps?q="
-                        ++ toString loc.latitude ++ ","
-                        ++ toString loc.longitude)]
-                  [text <| lat ++ "°N " ++ lon ++ "°W"]])
-
-roundTo : Int -> Float -> Float
-roundTo d r =
-  let order = toFloat (10^d)
-  in toFloat (round (r * order)) / order
