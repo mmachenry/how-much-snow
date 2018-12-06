@@ -38,6 +38,10 @@ def get_nearby_predictions (loc, conn):
             location on location.id = prediction.locationid
         where
             distance(latitude, longitude, :lat, :lon) < 50
+        order by
+            predictedfor,
+            latitude,
+            longitude
         ''')
     result = conn.execute(query, lat = latitude, lon = longitude)
     return [dict(row) for row in result]
