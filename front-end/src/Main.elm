@@ -12,6 +12,7 @@ import Time exposing (Time)
 import Time.DateTime exposing (DateTime)
 import Time.Iso8601
 import List.Extra
+import Random
 
 apiInvokeUrl = "https://oziaoyoi7f.execute-api.us-east-1.amazonaws.com/prod/prediction"
 
@@ -26,7 +27,8 @@ main =
 type alias Model = {
   location : Maybe (Result Geolocation.Error Geolocation.Location),
   prediction : Maybe (Result Http.Error PredictionData),
-  debug : Bool
+  debug : Bool,
+  randomAmount : Int
   }
 
 type alias Flags = {
@@ -48,15 +50,17 @@ type alias PredictionDatum = {
 type Msg =
     UpdateLocation (Result Geolocation.Error Geolocation.Location)
   | UpdateSnow (Result Http.Error PredictionData)
+  | UpdateRandom Int
 
 initState flags = {
   location = Nothing,
   prediction = Nothing,
-  debug = flags.debug
+  debug = flags.debug,
+  randomAmount = 0
   }
 
 init : Flags -> (Model, Cmd Msg)
-init flags = (initState flags, Task.attempt UpdateLocation Geolocation.now)
+init flags = (initState flags, Random.generate UpdateRandom (Random.int 0 36))
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
@@ -65,21 +69,8 @@ update msg model = case msg of
     case result of
       Ok loc -> getSnow loc
       Err err -> Cmd.none)
-  -- UpdateSnow (Err _) -> ({model|prediction =(Just (Ok {data=[]}))}, Cmd.none)
-  UpdateSnow (Err _) -> ({model|prediction =(Just (Ok (fakeData model.location)))}, Cmd.none)
   UpdateSnow result -> ({model | prediction = Just result}, Cmd.none)
-
-fakeData : Maybe (Result Geolocation.Error Geolocation.Location) -> PredictionData
-fakeData l = case l of
-  Just (Ok loc) -> {
-  data=[{
-    latitude=loc.latitude,
-    longitude=loc.longitude,
-    distance=0,
-    metersofsnow=1,
-    predictedfor=Time.DateTime.fromTimestamp loc.timestamp}]}
-  Just (Err _) -> {data=[]}
-  Nothing -> {data=[]}
+  UpdateRandom n -> ({model | randomAmount = n}, Task.attempt UpdateLocation Geolocation.now)
 
 getSnow : Geolocation.Location -> Cmd Msg
 getSnow loc =
@@ -158,47 +149,79 @@ view model =
   then debugView model
   else normalView model
 
-normalView model = div [] [
-  div [style [("font-weight", "bold"),
-              ("font-family", "Helvetica, sans-serif"),
-              ("text-decoration", "none"),
-              ("color", "black"),
-              ("text-align", "center"),
-              ("line-height", "80vh")]] [
-    case model.location of
-      Nothing -> pendingMessage "Getting your location..."
-      Just (Err err) -> errorMessage "No location available."
-      Just (Ok loc) ->
-        case model.prediction of
-          Nothing -> pendingMessage "Getting prediction..."
-          Just (Err err) -> errorMessage "Unable to get prediction data."
-          Just (Ok prediction) ->
-            case prediction.data of
-              [] -> errorMessage "You are out of range."
-              _ -> let now = Time.DateTime.fromTimestamp loc.timestamp
-                       metersofsnow = howMuchSnow now prediction.data
-                    in displayPrediction metersofsnow],
-    footer model
-  ]
+normalView model = div [style [("font-weight", "bold"),
+                               ("font-family", "Helvetica, sans-serif"),
+                               ("text-decoration", "none"),
+                               ("color", "black")]] [
+  case model.location of
+    Nothing -> pendingMessage "Getting your location..."
+    Just (Err err) -> noLocationError model.randomAmount
+    Just (Ok loc) ->
+      case model.prediction of
+        Nothing -> pendingMessage "Getting prediction..."
+        Just (Err err) -> noConnectionError model.randomAmount
+        Just (Ok prediction) ->
+          case prediction.data of
+            [] -> outOfRangeError model.randomAmount
+            _ -> let now = Time.DateTime.fromTimestamp loc.timestamp
+                     metersofsnow = howMuchSnow now prediction.data
+                  in displayPrediction metersofsnow,
+    footer model ]
 
-errorMessage : String -> Html Msg
-errorMessage message = div [] [ text message ]
+verticalCenter : List (Html Msg) -> Html Msg
+verticalCenter =
+  div [style [ ("text-align", "center"),
+               ("line-height", "80vh")]]
+
+center : List (Html Msg) -> Html Msg
+center elements =
+  div [style [("height", "80vh"),
+              ("position", "relative")]] [
+    div [style [("margin", "0"),
+                ("position", "absolute"),
+                ("top", "50%"),
+                ("left", "50%"),
+                ("-ms-transform", "translate(-50%, -50%)"),
+                ("transform", "translate(-50%, -50%)")]]
+        elements]
 
 pendingMessage : String -> Html Msg
-pendingMessage message = span [style [("font-size", "8vw")]] [text message]
+pendingMessage message = verticalCenter [span [style [("font-size", "8vw")]] [text message]]
 
 displayPrediction : Float -> Html Msg
 displayPrediction meters =
-    let inches = round (meters * 39.3701)
-        unitWord = if inches == 1 then "inch" else "inches"
-    in span [style [("font-size", "18vw")]]
-                   [text (toString inches ++ " " ++ unitWord)]
+  verticalCenter [
+    let inches = meters * 39.3701
+    in if inches > 0 && inches <= 0.75
+       then span [style [("font-size", "9vw")]]
+                 [text "Less than 1 inch"]
+       else let rounded = round inches
+                unitWord = if rounded == 1 then "inch" else "inches"
+            in span [style [("font-size", "18vw")]]
+                    [text (toString rounded ++ " " ++ unitWord)]]
+
+errorMessage : List (Html Msg) -> Html Msg
+errorMessage =
+  div [style [("margin", "20vh 10vw 20vh 10vw"),
+              ("font-size", "3vw")]]
+
+noLocationError : Int -> Html Msg
+noLocationError randomAmount =
+  errorMessage [text ("Your device would not share its location with us. We cannot predict how much snow you will get if we don't know where you are. But we can give you a random number as a guess. Here you go: " ++ toString randomAmount ++ " inches")]
+
+noConnectionError : Int -> Html Msg
+noConnectionError randomAmount =
+  errorMessage [ text ("We were unable to connect to our snowy database. Maybe it's our fault, but please check your network and try again. In lieu of a network connection, here's a random number as a guess: " ++ toString randomAmount ++ " inches")]
+
+outOfRangeError : Int -> Html Msg
+outOfRangeError randomAmount =
+  errorMessage [ text ("Your location is outside the coverage area of the SREF model used by this site. If you would like it to be extended to cover you, please contact the US government. In the mean time, here's a random number as a guess: " ++ toString randomAmount ++ " inches")]
 
 footer model =
   div [style [("position", "fixed"),
               ("right", "2vw"),
               ("bottom", "2vw"),
-              ("font-size", "3vw")]]
+              ("font-size", "2.5vw")]]
       [ footerLocation model, faqLink ]
 
 footerLocation model =
