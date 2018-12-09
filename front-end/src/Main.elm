@@ -135,9 +135,9 @@ influence datum = 1 / datum.distance^2
 
 timeLeft : DateTime -> PredictionDatum -> Float
 timeLeft now prediction =
-  let timeDelta = Time.DateTime.delta now prediction.predictedfor
+  let timeDelta = Time.DateTime.delta prediction.predictedfor now
       threeHours = 3*60
-  in min 1 (max 0 (1 - toFloat timeDelta.minutes / threeHours))
+  in min 1 (max 0 (toFloat timeDelta.minutes / threeHours))
 
 weightPrediction : (PredictionDatum, Float, Float) -> Float
 weightPrediction (datum, influence, timeRatio) =
