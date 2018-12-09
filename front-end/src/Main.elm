@@ -14,7 +14,9 @@ import Time.Iso8601
 import List.Extra
 import Random
 
-apiInvokeUrl = "https://oziaoyoi7f.execute-api.us-east-1.amazonaws.com/prod/prediction"
+inchesPerMeter = 39.3701
+apiInvokeUrl =
+  "https://oziaoyoi7f.execute-api.us-east-1.amazonaws.com/prod/prediction"
 
 main =
   Html.programWithFlags {
@@ -28,7 +30,7 @@ type alias Model = {
   location : Maybe (Result Geolocation.Error Geolocation.Location),
   prediction : Maybe (Result Http.Error PredictionData),
   debug : Bool,
-  randomAmount : Int
+  randomAmount : Float
   }
 
 type alias Flags = {
@@ -50,7 +52,7 @@ type alias PredictionDatum = {
 type Msg =
     UpdateLocation (Result Geolocation.Error Geolocation.Location)
   | UpdateSnow (Result Http.Error PredictionData)
-  | UpdateRandom Int
+  | UpdateRandom Float
 
 initState flags = {
   location = Nothing,
@@ -60,7 +62,7 @@ initState flags = {
   }
 
 init : Flags -> (Model, Cmd Msg)
-init flags = (initState flags, Random.generate UpdateRandom (Random.int 0 36))
+init flags = (initState flags, Random.generate UpdateRandom (Random.float 0 1))
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
@@ -70,7 +72,9 @@ update msg model = case msg of
       Ok loc -> getSnow loc
       Err err -> Cmd.none)
   UpdateSnow result -> ({model | prediction = Just result}, Cmd.none)
-  UpdateRandom n -> ({model | randomAmount = n}, Task.attempt UpdateLocation Geolocation.now)
+  UpdateRandom n ->
+    ({model | randomAmount = (1+2.71^n)/inchesPerMeter},
+     Task.attempt UpdateLocation Geolocation.now)
 
 getSnow : Geolocation.Location -> Cmd Msg
 getSnow loc =
@@ -173,49 +177,48 @@ verticalCenter =
   div [style [ ("text-align", "center"),
                ("line-height", "80vh")]]
 
-center : List (Html Msg) -> Html Msg
-center elements =
-  div [style [("height", "80vh"),
-              ("position", "relative")]] [
-    div [style [("margin", "0"),
-                ("position", "absolute"),
-                ("top", "50%"),
-                ("left", "50%"),
-                ("-ms-transform", "translate(-50%, -50%)"),
-                ("transform", "translate(-50%, -50%)")]]
-        elements]
-
 pendingMessage : String -> Html Msg
-pendingMessage message = verticalCenter [span [style [("font-size", "8vw")]] [text message]]
+pendingMessage message =
+  verticalCenter [span [style [("font-size", "8vw")]] [text message]]
 
 displayPrediction : Float -> Html Msg
 displayPrediction meters =
-  verticalCenter [
-    let inches = meters * 39.3701
-    in if inches > 0 && inches <= 0.75
-       then span [style [("font-size", "9vw")]]
-                 [text "Less than 1 inch"]
-       else let rounded = round inches
-                unitWord = if rounded == 1 then "inch" else "inches"
-            in span [style [("font-size", "18vw")]]
-                    [text (toString rounded ++ " " ++ unitWord)]]
+  let outputStr = metersToInchesStr meters
+      size = if String.length outputStr > 10
+             then "9vw"
+             else "18vw"
+  in verticalCenter [
+       span [style [("font-size", size)]]
+            [text outputStr]]
+
+metersToInchesStr : Float -> String
+metersToInchesStr meters =
+  let inches = meters * inchesPerMeter
+  in if inches > 0 && inches <= 0.75
+     then "Less than 1 inch"
+     else let rounded = round inches
+              unitWord =
+                if rounded == 1
+                then "inch"
+                else "inches"
+          in toString rounded ++ " " ++ unitWord
 
 errorMessage : List (Html Msg) -> Html Msg
 errorMessage =
   div [style [("margin", "20vh 10vw 20vh 10vw"),
               ("font-size", "3vw")]]
 
-noLocationError : Int -> Html Msg
-noLocationError randomAmount =
-  errorMessage [text ("Your device would not share its location with us. We cannot predict how much snow you will get if we don't know where you are. But we can give you a random number as a guess. Here you go: " ++ toString randomAmount ++ " inches")]
+noLocationError : Float -> Html Msg
+noLocationError randomAmount = errorMessage [text (" Your device would not share its location with us. We cannot predict how much snow you will get if we don't know where you are. But we can give you a random number as a guess. Here you go: "
+  ++ metersToInchesStr randomAmount)]
 
-noConnectionError : Int -> Html Msg
-noConnectionError randomAmount =
-  errorMessage [ text ("We were unable to connect to our snowy database. Maybe it's our fault, but please check your network and try again. In lieu of a network connection, here's a random number as a guess: " ++ toString randomAmount ++ " inches")]
+noConnectionError : Float -> Html Msg
+noConnectionError randomAmount = errorMessage [ text (" We were unable to connect to our snowy database. Maybe it's our fault, but please check your network and try again. In lieu of a network connection, here's a random number as a guess: "
+  ++ metersToInchesStr randomAmount)]
 
-outOfRangeError : Int -> Html Msg
-outOfRangeError randomAmount =
-  errorMessage [ text ("Your location is outside the coverage area of the SREF model used by this site. If you would like it to be extended to cover you, please contact the US government. In the mean time, here's a random number as a guess: " ++ toString randomAmount ++ " inches")]
+outOfRangeError : Float -> Html Msg
+outOfRangeError randomAmount = errorMessage [ text (" Your location is outside the coverage area of the SREF model used by this site. If you would like it to be extended to cover you, please contact the US government. In the mean time, here's a random number as a guess: "
+  ++ metersToInchesStr randomAmount)]
 
 footer model =
   div [style [("position", "fixed"),
