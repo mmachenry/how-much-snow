@@ -194,7 +194,7 @@ displayPrediction meters =
 metersToInchesStr : Float -> String
 metersToInchesStr meters =
   let inches = meters * inchesPerMeter
-  in if inches > 0 && inches <= 0.75
+  in if inches > 0.2 && inches <= 0.75
      then "Less than 1 inch"
      else let rounded = round inches
               unitWord =
