@@ -113,13 +113,14 @@ decodeISO8601 =
 -- Calculation --
 -----------------
 
-howMuchSnow : DateTime -> List PredictionDatum -> Float
+howMuchSnow : DateTime -> List PredictionDatum -> (Float, Bool)
 howMuchSnow now data =
   let embelishedData = embelish now data
       uniqueInfluences =
         List.Extra.unique (List.map (\(_,i,_)->i) embelishedData)
       weightedPredictions = List.map weightPrediction embelishedData
-  in List.sum weightedPredictions / List.sum uniqueInfluences
+  in (List.sum weightedPredictions / List.sum uniqueInfluences,
+      isCurrentlySnowing embelishedData)
 
 embelish :
      DateTime
@@ -142,6 +143,15 @@ timeLeft now prediction =
 weightPrediction : (PredictionDatum, Float, Float) -> Float
 weightPrediction (datum, influence, timeRatio) =
   datum.metersofsnow * influence * timeRatio
+
+isCurrentlySnowing : List (PredictionDatum, Float, Float) -> Bool
+isCurrentlySnowing data =
+  List.any
+    (\(p, _, timeLeft)->
+         p.metersofsnow > 0
+      && timeLeft > 0
+      && timeLeft < 1)
+    data
 
 ----------
 -- View --
@@ -168,8 +178,7 @@ normalView model = div [style [("font-weight", "bold"),
           case prediction.data of
             [] -> outOfRangeError model.randomAmount
             _ -> let now = Time.DateTime.fromTimestamp loc.timestamp
-                     metersofsnow = howMuchSnow now prediction.data
-                  in displayPrediction metersofsnow,
+                 in displayPrediction (howMuchSnow now prediction.data),
     footer model ]
 
 verticalCenter : List (Html Msg) -> Html Msg
@@ -181,9 +190,9 @@ pendingMessage : String -> Html Msg
 pendingMessage message =
   verticalCenter [span [style [("font-size", "8vw")]] [text message]]
 
-displayPrediction : Float -> Html Msg
-displayPrediction meters =
-  let outputStr = metersToInchesStr meters
+displayPrediction : (Float, Bool) -> Html Msg
+displayPrediction (meters, currentlySnowing) =
+  let outputStr = metersToInchesStr (meters, currentlySnowing)
       size = if String.length outputStr > 10
              then "9vw"
              else "18vw"
@@ -191,17 +200,18 @@ displayPrediction meters =
        span [style [("font-size", size)]]
             [text outputStr]]
 
-metersToInchesStr : Float -> String
-metersToInchesStr meters =
+metersToInchesStr : (Float, Bool) -> String
+metersToInchesStr (meters, currentlySnowing) =
   let inches = meters * inchesPerMeter
   in if inches > 0.2 && inches <= 0.75
-     then "Less than 1 inch"
+     then "Less than 1 " ++ unitWord (1, currentlySnowing)
      else let rounded = round inches
-              unitWord =
-                if rounded == 1
-                then "inch"
-                else "inches"
-          in toString rounded ++ " " ++ unitWord
+          in toString rounded ++ " " ++ unitWord (rounded, currentlySnowing)
+
+unitWord : (Int, Bool) -> String
+unitWord (rounded, currentlySnowing) =
+  (if currentlySnowing then "more " else "")
+  ++ if rounded == 1 then "inch" else "inches"
 
 errorMessage : List (Html Msg) -> Html Msg
 errorMessage =
@@ -210,15 +220,15 @@ errorMessage =
 
 noLocationError : Float -> Html Msg
 noLocationError randomAmount = errorMessage [text (" Your device would not share its location with us. We cannot predict how much snow you will get if we don't know where you are. But we can give you a random number as a guess. Here you go: "
-  ++ metersToInchesStr randomAmount)]
+  ++ metersToInchesStr (randomAmount, False))]
 
 noConnectionError : Float -> Html Msg
 noConnectionError randomAmount = errorMessage [ text (" We were unable to connect to our snowy database. Maybe it's our fault, but please check your network and try again. In lieu of a network connection, here's a random number as a guess: "
-  ++ metersToInchesStr randomAmount)]
+  ++ metersToInchesStr (randomAmount, False))]
 
 outOfRangeError : Float -> Html Msg
 outOfRangeError randomAmount = errorMessage [ text (" Your location is outside the coverage area of the SREF model used by this site. If you would like it to be extended to cover you, please contact the US government. In the mean time, here's a random number as a guess: "
-  ++ metersToInchesStr randomAmount)]
+  ++ metersToInchesStr (randomAmount, False))]
 
 footer model =
   div [style [("position", "fixed"),
@@ -269,9 +279,15 @@ debugView model =
         Just (Err _) -> show model
         Just (Ok p) ->
           let now = Time.DateTime.fromTimestamp loc.timestamp
+              (metersOfSnow, currentlySnowing) = howMuchSnow now p.data
           in div [] [
                h1 [] [ text "Total" ],
-               div [] [ text (toString (howMuchSnow now p.data)) ],
+               div [] [ text (toString metersOfSnow
+                              ++ " meters or "
+                              ++ toString(metersOfSnow * inchesPerMeter)
+                              ++ " inches")],
+               h1 [] [ text "Displayed as" ],
+               div [] [ text (metersToInchesStr (metersOfSnow, currentlySnowing)) ],
                h1 [] [ text "Geolocation" ],
                div [] [ text (toString loc) ],
                h1 [] [ text "Datetime from timestamp"],
