@@ -114,13 +114,15 @@ decodeISO8601 =
 -----------------
 
 howMuchSnow : DateTime -> List PredictionDatum -> (Float, Bool)
-howMuchSnow now data =
+howMuchSnow now data = (0.1, False)
+{-
   let embelishedData = embelish now data
       uniqueInfluences =
         List.Extra.unique (List.map (\(_,i,_)->i) embelishedData)
       weightedPredictions = List.map weightPrediction embelishedData
   in (List.sum weightedPredictions / List.sum uniqueInfluences,
       isCurrentlySnowing embelishedData)
+-}
 
 embelish :
      DateTime
@@ -184,7 +186,7 @@ normalView model = div [style [("font-weight", "bold"),
 verticalCenter : List (Html Msg) -> Html Msg
 verticalCenter =
   div [style [ ("text-align", "center"),
-               ("line-height", "80vh")]]
+               ("line-height", "70vh")]]
 
 pendingMessage : String -> Html Msg
 pendingMessage message =
@@ -193,11 +195,9 @@ pendingMessage message =
 displayPrediction : (Float, Bool) -> Html Msg
 displayPrediction (meters, currentlySnowing) =
   let outputStr = metersToInchesStr (meters, currentlySnowing)
-      size = if String.length outputStr > 10
-             then "9vw"
-             else "18vw"
+      size = 80 / toFloat (String.length outputStr)
   in verticalCenter [
-       span [style [("font-size", size)]]
+       span [style [("font-size", toString size ++ "vw")]]
             [text outputStr]]
 
 metersToInchesStr : (Float, Bool) -> String
@@ -234,7 +234,7 @@ footer model =
   div [style [("position", "fixed"),
               ("right", "2vw"),
               ("bottom", "2vw"),
-              ("font-size", "2.5vw")]]
+              ("font-size", "1.8vw")]]
       [ footerLocation model, faqLink ]
 
 footerLocation model =
