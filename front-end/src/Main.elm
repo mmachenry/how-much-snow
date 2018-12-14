@@ -114,15 +114,13 @@ decodeISO8601 =
 -----------------
 
 howMuchSnow : DateTime -> List PredictionDatum -> (Float, Bool)
-howMuchSnow now data = (0.1, False)
-{-
+howMuchSnow now data =
   let embelishedData = embelish now data
       uniqueInfluences =
         List.Extra.unique (List.map (\(_,i,_)->i) embelishedData)
       weightedPredictions = List.map weightPrediction embelishedData
   in (List.sum weightedPredictions / List.sum uniqueInfluences,
       isCurrentlySnowing embelishedData)
--}
 
 embelish :
      DateTime
