@@ -73,7 +73,7 @@ update msg model = case msg of
       Err err -> Cmd.none)
   UpdateSnow result -> ({model | prediction = Just result}, Cmd.none)
   UpdateRandom n ->
-    ({model | randomAmount = (1+2.71^n)/inchesPerMeter},
+    ({model | randomAmount = 2.718^(n*4)/inchesPerMeter},
      Task.attempt UpdateLocation Geolocation.now)
 
 getSnow : Geolocation.Location -> Cmd Msg
