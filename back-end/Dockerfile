@@ -1,4 +1,4 @@
-FROM python:2
+FROM python:3.7
 RUN apt-get update
 RUN apt-get -y install gfortran
 RUN wget http://www.ftp.cpc.ncep.noaa.gov/wd51we/wgrib2/wgrib2.tgz

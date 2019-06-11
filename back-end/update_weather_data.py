@@ -14,31 +14,33 @@ SOURCE_FILE_REGEXP = "sref.t(03|09|15|21)z.pgrb212.mean_3hrly.grib2"
 MAX_CSV_CHUNK_SIZE = 100000
 
 def main ():
-    #print "Starting."
+    #print("Starting.")
     temp_dir = tempfile.mkdtemp()
-    #print "Downloading to " + temp_dir
-    download_weather_data(temp_dir)
-    #print "Converting to CSV."
+    #print("Downloading to " + temp_dir)
+    filename = download_weather_data(temp_dir)
+    #print("Converting to CSV.")
     filenames = convert_to_csv(temp_dir)
-    #print "Connecting to DB."
-    connection = get_connection(config.DB)
-    transaction = connection.begin()
-    #print "Importing ", filenames
-    do_db_import(connection, filenames)
-    #print "Closing transaction."
+    #print("Connecting to DB.")
+    dbh = get_connection(config.DB)
+    transaction = dbh.begin()
+    #print("Importing ", filenames)
+    do_db_import(dbh, filenames)
+    update_most_recent_filename(dbh, filename)
+    #print("Closing transaction.")
     transaction.commit()
-    #print "Removing " + temp_dir
+    #print("Removing " + temp_dir)
     shutil.rmtree(temp_dir)
 
 def download_weather_data (temp_dir):
     ftp = FTP('ftpprd.ncep.noaa.gov')
     ftp.login()
-    filename = get_latest_run_filenames(ftp)
+    filename = get_latest_run_filename(ftp)
     if filename:
         download_file(ftp, temp_dir, filename)
     ftp.close()
+    return filename
 
-def get_latest_run_filenames (ftp):
+def get_latest_run_filename (ftp):
     ftp.cwd('pub/data/nccf/com/sref/prod')
     for date_dir in sorted(ftp.nlst(), reverse=True):
         three_hourly_dirs = ftp.nlst(date_dir)
@@ -224,6 +226,15 @@ def remove_old_predictions(dbh):
             prediction
         where
             predictedfor < now() - interval '3' hour
+    """)
+
+def update_most_recent_filename(dbh, filename):
+    dbh.execute("""
+        insert into filelog (key, value, time)
+        values ('LATEST', '""" + filename + """', now())
+        on conflict (key) do update
+        set value = '""" + filename + """',
+            time = now()
     """)
 
 if __name__ == "__main__":
