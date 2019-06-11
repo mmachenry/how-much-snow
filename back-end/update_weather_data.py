@@ -8,35 +8,42 @@ import csv
 import subprocess
 import sqlalchemy
 import config
+import sys
 
 WGRIB_PROGRAM = "/grib2/wgrib2/wgrib2"
 SOURCE_FILE_REGEXP = "sref.t(03|09|15|21)z.pgrb212.mean_3hrly.grib2"
 MAX_CSV_CHUNK_SIZE = 100000
 
 def main ():
-    #print("Starting.")
+    print("Starting.")
     temp_dir = tempfile.mkdtemp()
-    #print("Downloading to " + temp_dir)
-    filename = download_weather_data(temp_dir)
-    #print("Converting to CSV.")
-    filenames = convert_to_csv(temp_dir)
-    #print("Connecting to DB.")
     dbh = get_connection(config.DB)
+    latest_filename = get_most_recent_filename(dbh)
+    print("Downloading to " + temp_dir)
+    filename = download_weather_data(temp_dir, latest_filename)
+    print("Converting to CSV.")
+    filenames = convert_to_csv(temp_dir)
+    print("Connecting to DB.")
     transaction = dbh.begin()
-    #print("Importing ", filenames)
+    print("Importing ", filenames)
     do_db_import(dbh, filenames)
     update_most_recent_filename(dbh, filename)
-    #print("Closing transaction.")
+    print("Closing transaction.")
     transaction.commit()
-    #print("Removing " + temp_dir)
+    print("Removing " + temp_dir)
     shutil.rmtree(temp_dir)
 
-def download_weather_data (temp_dir):
+def download_weather_data (temp_dir, latest_filename):
     ftp = FTP('ftpprd.ncep.noaa.gov')
     ftp.login()
     filename = get_latest_run_filename(ftp)
     if filename:
-        download_file(ftp, temp_dir, filename)
+        if filename == latest_filename:
+            print("Latest filename, ", filename, " already imported.")
+            ftp.close()
+            sys.exit()
+        else:
+            download_file(ftp, temp_dir, filename)
     ftp.close()
     return filename
 
@@ -93,7 +100,6 @@ def create_temp_table (dbh):
 def store_files_in_database (dbh, filenames):
     initial_insert = True
     for filename in filenames:
-        #print filename, initial_insert
         m = re.search("grib2[.]([A-Z]+)[.]csv", filename)
         weather_type = m.group(1)
         store_file_in_database(dbh, initial_insert, weather_type, filename)
@@ -236,6 +242,11 @@ def update_most_recent_filename(dbh, filename):
         set value = '""" + filename + """',
             time = now()
     """)
+
+def get_most_recent_filename(dbh):
+    return dbh.execute("""
+        select value from filelog where key = 'LATEST'
+    """).fetchone()[0]
 
 if __name__ == "__main__":
     main()
