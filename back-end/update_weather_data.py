@@ -1,69 +1,49 @@
 import os
 import glob
 import re
-from ftplib import FTP
 import tempfile
 import shutil
 import csv
 import subprocess
 import sqlalchemy
 import config
-import sys
-import boto3
+import filename_log
+import noaa_ftp
 
 WGRIB_PROGRAM = "/grib2/wgrib2/wgrib2"
-SOURCE_FILE_REGEXP = "sref.t(03|09|15|21)z.pgrb212.mean_3hrly.grib2"
 MAX_CSV_CHUNK_SIZE = 100000
 
 def main ():
     print("Starting.")
     temp_dir = tempfile.mkdtemp()
-    dbh = get_connection(config.DB)
-    latest_filename = get_most_recent_filename(dbh)
+
     print("Downloading to " + temp_dir)
-    filename = download_weather_data(temp_dir, latest_filename)
+    ftp = noaa_ftp.connect_to_ftp()
+    filename = noaa_ftp.get_latest_run_filename(ftp)
+
+    latest_filename = filename_log.get_most_recent_filename()
+    if filename == latest_filename:
+        print("Already imported: ", filename)
+        ftp.quit()
+        return
+
+    noaa_ftp.download_file(ftp, temp_dir, filename)
+    ftp.quit()
+
     print("Converting to CSV.")
-    filenames = convert_to_csv(temp_dir)
-    print("Connecting to DB.")
+    csv_filenames = convert_to_csv(temp_dir)
+
+    print("Importing ", csv_filenames)
+    dbh = connect_to_db(config.DB)
     transaction = dbh.begin()
-    print("Importing ", filenames)
-    do_db_import(dbh, filenames)
-    update_most_recent_filename(dbh, filename)
-    print("Closing transaction.")
+    do_db_import(dbh, csv_filenames)
     transaction.commit()
-    print("Removing " + temp_dir)
     shutil.rmtree(temp_dir)
 
-def download_weather_data (temp_dir, latest_filename):
-    ftp = FTP('ftpprd.ncep.noaa.gov')
-    ftp.login()
-    filename = get_latest_run_filename(ftp)
-    if filename:
-        if filename == latest_filename:
-            print("Latest filename, ", filename, " already imported.")
-            ftp.close()
-            sys.exit()
-        else:
-            download_file(ftp, temp_dir, filename)
-    ftp.close()
-    return filename
+    print("Updating file log.")
+    filename_log.update_most_recent_filename(filename)
 
-def get_latest_run_filename (ftp):
-    ftp.cwd('pub/data/nccf/com/sref/prod')
-    for date_dir in sorted(ftp.nlst(), reverse=True):
-        three_hourly_dirs = ftp.nlst(date_dir)
-        for three_hourly_dir in sorted(three_hourly_dirs, reverse=True):
-            filenames = ftp.nlst(three_hourly_dir + "/ensprod")
-            for filename in filenames:
-                if re.search(SOURCE_FILE_REGEXP, filename):
-                    return filename
-    return None
-
-def download_file(ftp, temp_dir, filename):
-    local_filename = os.path.join(temp_dir, os.path.basename(filename))
-    file = open(local_filename, 'wb')
-    ftp.retrbinary('RETR '+ filename, file.write)
-    file.close()
+    print("Done.")
 
 def convert_to_csv (temp_dir):
     data_points = [
@@ -85,7 +65,7 @@ def convert_to_csv (temp_dir):
             processed_files.append(csv_filename)
     return processed_files
 
-def get_connection (db):
+def connect_to_db (db):
     return sqlalchemy.create_engine(config.DB).connect()
 
 def do_db_import (dbh, filenames):
@@ -234,35 +214,6 @@ def remove_old_predictions(dbh):
         where
             predictedfor < now() - interval '3' hour
     """)
-
-def update_most_recent_filename(dbh, filename):
-    dbh.execute("""
-        insert into filelog (key, value, time)
-        values ('LATEST', '""" + filename + """', now())
-        on conflict (key) do update
-        set value = '""" + filename + """',
-            time = now()
-    """)
-
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('howmuchsnowupdatelog')
-    table.update_item(
-        Key = {
-            'key': 'filename'
-        },
-        UpdateExpression = 'SET #value = :value',
-        ExpressionAttributeValues = {
-            ':value': filename
-        },
-        ExpressionAttributeNames = {
-            "#value": "value"
-        }
-    )
-
-def get_most_recent_filename(dbh):
-    return dbh.execute("""
-        select value from filelog where key = 'LATEST'
-    """).fetchone()[0]
 
 if __name__ == "__main__":
     main()

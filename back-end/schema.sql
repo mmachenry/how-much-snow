@@ -20,13 +20,6 @@ create table prediction (
 
 create index prediction_location on prediction(locationid);
 
-create table filelog (
-    key varchar(20) not null,
-    value varchar(200) not null,
-    time timestamp not null,
-    unique(key)
-);
-
 create or replace function distance (lat1 real, lon1 real, lat2 real, lon2 real) returns real as $$
 /*
 The distance in km between the two points.
