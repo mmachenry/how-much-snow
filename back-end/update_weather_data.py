@@ -9,6 +9,7 @@ import subprocess
 import sqlalchemy
 import config
 import sys
+import boto3
 
 WGRIB_PROGRAM = "/grib2/wgrib2/wgrib2"
 SOURCE_FILE_REGEXP = "sref.t(03|09|15|21)z.pgrb212.mean_3hrly.grib2"
@@ -242,6 +243,21 @@ def update_most_recent_filename(dbh, filename):
         set value = '""" + filename + """',
             time = now()
     """)
+
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('howmuchsnowupdatelog')
+    table.update_item(
+        Key = {
+            'key': 'filename'
+        },
+        UpdateExpression = 'SET #value = :value',
+        ExpressionAttributeValues = {
+            ':value': filename
+        },
+        ExpressionAttributeNames = {
+            "#value": "value"
+        }
+    )
 
 def get_most_recent_filename(dbh):
     return dbh.execute("""
