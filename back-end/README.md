@@ -6,7 +6,7 @@ function that acts as the implementation for the REST API to get weather
 predictions as well as a cron job script to pull prediction data from NOAA,
 parse it, and put it into the database.
 
-Installation of Lambda API
+Installation of get_prediction Lambda
 ---
 
     virtualenv --python `which python3` venv
@@ -16,6 +16,12 @@ Installation of Lambda API
     zip deploy.zip lambda_function.py config.py
     cd venv/lib/python3.6/site-packages/
     zip -ur ../../../../deploy.zip *
+    # Copy the zip file up to the lambda function in AWS console
+
+Installation of trigger_update Lambda
+---
+
+    zip deploy.zip trigger_update.py noaa_ftp.py filename_log.py
     # Copy the zip file up to the lambda function in AWS console
 
 Installation of Docker backend
