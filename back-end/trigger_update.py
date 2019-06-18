@@ -9,6 +9,7 @@ def lambda_handler(event, context):
     ftp = noaa_ftp.connect_to_ftp()
     newest_available = noaa_ftp.get_latest_run_filename(ftp)
     ftp.close()
+
     most_recent_import = filename_log.get_most_recent_filename()
 
     if most_recent_import == newest_available:
@@ -29,7 +30,8 @@ def lambda_handler(event, context):
                     'securityGroups': [
                         'sg-03bb63bf7b3389d42',
                     ],
-                    'assignPublicIp': 'DISABLED'
+                    'assignPublicIp': 'ENABLED'
                 }
             },
         )
+        print(response)
