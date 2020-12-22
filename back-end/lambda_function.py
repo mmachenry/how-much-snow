@@ -31,7 +31,8 @@ def get_nearby_predictions (loc, conn):
             longitude,
             distance(latitude, longitude, :lat, :lon) distance,
             metersofsnow,
-            predictedfor
+            predictedfor,
+            extract(epoch from predictedfor at time zone 'UTC')*1000::INTEGER millis
         from
             prediction
         join

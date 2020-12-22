@@ -9,7 +9,7 @@ parse it, and put it into the database.
 Installation of get_prediction Lambda
 ---
 
-    virtualenv --python `which python3` venv
+    virtualenv --python `which python3.6` venv
     source venv/bin/activate
     pip install sqlalchemy psycopg2-binary simplejson
     deactivate
