@@ -252,7 +252,7 @@ noLocationError randomAmount = errorMessage [text (" Your device would not share
 
 noConnectionError : Http.Error -> Float -> Html Msg
 noConnectionError err randomAmount = errorMessage [ text (" We were unable to connect to our snowy database. Maybe it's our fault, but please check your network and try again. In lieu of a network connection, here's a random number as a guess: "
-  ++ metersToInchesStr (randomAmount, False) ++ Debug.toString err)]
+  ++ metersToInchesStr (randomAmount, False))]
 
 outOfRangeError : Float -> Html Msg
 outOfRangeError randomAmount = errorMessage [ text (" Your location is outside the coverage area of the SREF model used by this site. If you would like it to be extended to cover you, please contact the US government. In the mean time, here's a random number as a guess: "
@@ -299,12 +299,12 @@ roundTo d r =
 debugView : Model -> Html Msg
 debugView model =
   case model.location of
-    Nothing -> show model
-    Just (Err _) -> show model
+    Nothing -> p [] [text "Getting location..."]
+    Just (Err _) -> p [] [text "Location error!"]
     Just (Ok loc) ->
       case model.prediction of
-        Nothing -> show model
-        Just (Err _) -> show model
+        Nothing -> p [] [text "Getting prediction..."]
+        Just (Err _) -> p [] [text "Prediction error!"]
         Just (Ok p) ->
           let now = loc.timestamp
               (metersOfSnow, currentlySnowing) = howMuchSnow now p.data
@@ -317,7 +317,7 @@ debugView model =
                h1 [] [ text "Displayed as" ],
                div [] [ text (metersToInchesStr (metersOfSnow, currentlySnowing)) ],
                h1 [] [ text "Geolocation" ],
-               div [] [ text (Debug.toString loc) ],
+               div [] [ text (String.fromFloat loc.latitude ++ ", " ++ String.fromFloat loc.longitude) ],
                h1 [] [ text "Datetime from timestamp"],
                div [] [ text (Iso8601.fromTime now) ],
                h1 [] [ text "Data" ],
@@ -346,9 +346,6 @@ tableRow (prediction, influence, timeLeft) =
     td [s] [ text (String.fromFloat influence)],
     td [s] [ text (String.fromFloat timeLeft)]
     ]
-
-show : Model -> Html Msg
-show model = div [] [ text (Debug.toString model) ]
 
 ----------------
 -- FAQ view --
