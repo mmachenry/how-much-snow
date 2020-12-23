@@ -14,6 +14,7 @@ import Time
 import Iso8601
 import List.Extra
 import Random
+import List.Extra exposing (maximumBy)
 
 inchesPerMeter = 39.3701
 apiInvokeUrl =
@@ -100,7 +101,7 @@ urlToPage url = case url.path of
   "/" -> Home
   "/debug" -> Debug
   "/faq" -> Faq
-  otherwise -> NotFound
+  _ -> NotFound
 
 getSnow : Geolocation -> Cmd Msg
 getSnow loc = Http.get {
@@ -273,12 +274,52 @@ footerLocation model =
          Just (Ok loc) ->
            let lat = String.fromFloat (roundTo 5 loc.latitude)
                lon = String.fromFloat (roundTo 5 loc.longitude)
-           in [ text "Assuming you're near ",
+           in [ text ("Predicted through " ++ windowClosing model ++ " assuming you're near "),
                 a [href ("https://www.google.com/maps?q="
                         ++ String.fromFloat loc.latitude ++ ","
                         ++ String.fromFloat loc.longitude)]
                   [text <| lat ++ "°N " ++ lon ++ "°W"],
                 text " | "])
+
+windowClosing : Model -> String
+windowClosing model = case latestPredictedFor model of
+  Just t -> roughTimeString Time.utc t
+  Nothing -> "..."
+
+latestPredictedFor : Model -> Maybe Time.Posix
+latestPredictedFor model =
+  case model.location of
+    Just (Ok loc) ->
+      case model.prediction of
+        Just (Ok p) ->
+          maximumBy Time.posixToMillis (List.map .predictedfor p.data)
+        _ -> Nothing
+    _ -> Nothing
+  
+roughTimeString : Time.Zone -> Time.Posix -> String
+roughTimeString tz time =
+  weekdayName tz time ++ " " ++ timeOfDayRangeName tz time
+
+weekdayName tz time = case Time.toWeekday tz time of
+  Time.Mon -> "Monday"
+  Time.Tue -> "Tuesday"
+  Time.Wed -> "Wednesday"
+  Time.Thu -> "Thursday"
+  Time.Fri -> "Friday"
+  Time.Sat -> "Saturday"
+  Time.Sun -> "Sunday"
+
+timeOfDayRangeName : Time.Zone -> Time.Posix -> String
+timeOfDayRangeName tz time =
+  let hour = Time.toHour tz time
+  in if hour <= 6 then
+       "early morning"
+     else if hour <= 12 then
+       "at noon"
+     else if hour <= 18 then
+       "evening"
+     else
+       "night"
 
 faqLink =
   a [style "font-weight" "bold",
