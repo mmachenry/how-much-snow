@@ -42,7 +42,8 @@ type alias Model = {
   page : Page,
   location : Maybe (Result Http.Error Geolocation),
   prediction : Maybe (Result Http.Error PredictionData),
-  randomAmount : Float
+  randomAmount : Float,
+  timezone : Maybe Time.Zone
   }
 
 type Page = Home | Debug | Faq | NotFound
@@ -63,7 +64,8 @@ type alias PredictionDatum = {
   }
 
 type Msg =
-    UpdateLocation Json.Value
+    UpdateTimezone Time.Zone
+  | UpdateLocation Json.Value
   | UpdateSnow (Result Http.Error PredictionData)
   | UpdateRandom Float
   | OnUrlRequest UrlRequest
@@ -73,11 +75,15 @@ init : Flags -> Url -> Nav.Key -> (Model, Cmd Msg)
 init flags url navKey = ({
   navKey = navKey,
   page = urlToPage url,
+  timezone = Nothing,
   location = Nothing,
   prediction = Nothing,
   randomAmount = 0
   },
-  Random.generate UpdateRandom (Random.float 0 1))
+  Cmd.batch [
+    Task.perform UpdateTimezone Time.here,
+    Random.generate UpdateRandom (Random.float 0 1)
+    ])
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = updateLocation UpdateLocation
@@ -88,6 +94,7 @@ update msg model = case msg of
     Ok loc -> ({model | location = Just (Ok loc)}, getSnow loc)
     Err str -> (model, Cmd.none)
   UpdateSnow result -> ({model | prediction = Just result}, Cmd.none)
+  UpdateTimezone zone -> ({model | timezone = Just zone}, Cmd.none)
   UpdateRandom n ->
     ({model | randomAmount = 2.718^(n*4)/inchesPerMeter}, Cmd.none)
   OnUrlRequest urlRequest ->
@@ -282,9 +289,13 @@ footerLocation model =
                 text " | "])
 
 windowClosing : Model -> String
-windowClosing model = case latestPredictedFor model of
-  Just t -> roughTimeString Time.utc t
-  Nothing -> "..."
+windowClosing model =
+  case latestPredictedFor model of
+    Just t ->
+      case model.timezone of
+        Just tz -> roughTimeString tz t
+        Nothing -> "..."
+    Nothing -> "..."
 
 latestPredictedFor : Model -> Maybe Time.Posix
 latestPredictedFor model =
