@@ -14,6 +14,7 @@ import Time
 import Iso8601
 import List.Extra
 import Random
+import List.Extra exposing (maximumBy)
 
 inchesPerMeter = 39.3701
 apiInvokeUrl =
@@ -41,7 +42,8 @@ type alias Model = {
   page : Page,
   location : Maybe (Result Http.Error Geolocation),
   prediction : Maybe (Result Http.Error PredictionData),
-  randomAmount : Float
+  randomAmount : Float,
+  timezone : Maybe Time.Zone
   }
 
 type Page = Home | Debug | Faq | NotFound
@@ -62,7 +64,8 @@ type alias PredictionDatum = {
   }
 
 type Msg =
-    UpdateLocation Json.Value
+    UpdateTimezone Time.Zone
+  | UpdateLocation Json.Value
   | UpdateSnow (Result Http.Error PredictionData)
   | UpdateRandom Float
   | OnUrlRequest UrlRequest
@@ -72,11 +75,15 @@ init : Flags -> Url -> Nav.Key -> (Model, Cmd Msg)
 init flags url navKey = ({
   navKey = navKey,
   page = urlToPage url,
+  timezone = Nothing,
   location = Nothing,
   prediction = Nothing,
   randomAmount = 0
   },
-  Random.generate UpdateRandom (Random.float 0 1))
+  Cmd.batch [
+    Task.perform UpdateTimezone Time.here,
+    Random.generate UpdateRandom (Random.float 0 1)
+    ])
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = updateLocation UpdateLocation
@@ -87,6 +94,7 @@ update msg model = case msg of
     Ok loc -> ({model | location = Just (Ok loc)}, getSnow loc)
     Err str -> (model, Cmd.none)
   UpdateSnow result -> ({model | prediction = Just result}, Cmd.none)
+  UpdateTimezone zone -> ({model | timezone = Just zone}, Cmd.none)
   UpdateRandom n ->
     ({model | randomAmount = 2.718^(n*4)/inchesPerMeter}, Cmd.none)
   OnUrlRequest urlRequest ->
@@ -100,7 +108,7 @@ urlToPage url = case url.path of
   "/" -> Home
   "/debug" -> Debug
   "/faq" -> Faq
-  otherwise -> NotFound
+  _ -> NotFound
 
 getSnow : Geolocation -> Cmd Msg
 getSnow loc = Http.get {
@@ -273,12 +281,56 @@ footerLocation model =
          Just (Ok loc) ->
            let lat = String.fromFloat (roundTo 5 loc.latitude)
                lon = String.fromFloat (roundTo 5 loc.longitude)
-           in [ text "Assuming you're near ",
+           in [ text ("Predicted through " ++ windowClosing model ++ " assuming you're near "),
                 a [href ("https://www.google.com/maps?q="
                         ++ String.fromFloat loc.latitude ++ ","
                         ++ String.fromFloat loc.longitude)]
                   [text <| lat ++ "°N " ++ lon ++ "°W"],
                 text " | "])
+
+windowClosing : Model -> String
+windowClosing model =
+  case latestPredictedFor model of
+    Just t ->
+      case model.timezone of
+        Just tz -> roughTimeString tz t
+        Nothing -> "..."
+    Nothing -> "..."
+
+latestPredictedFor : Model -> Maybe Time.Posix
+latestPredictedFor model =
+  case model.location of
+    Just (Ok loc) ->
+      case model.prediction of
+        Just (Ok p) ->
+          maximumBy Time.posixToMillis (List.map .predictedfor p.data)
+        _ -> Nothing
+    _ -> Nothing
+  
+roughTimeString : Time.Zone -> Time.Posix -> String
+roughTimeString tz time =
+  weekdayName tz time ++ " " ++ timeOfDayRangeName tz time
+
+weekdayName tz time = case Time.toWeekday tz time of
+  Time.Mon -> "Monday"
+  Time.Tue -> "Tuesday"
+  Time.Wed -> "Wednesday"
+  Time.Thu -> "Thursday"
+  Time.Fri -> "Friday"
+  Time.Sat -> "Saturday"
+  Time.Sun -> "Sunday"
+
+timeOfDayRangeName : Time.Zone -> Time.Posix -> String
+timeOfDayRangeName tz time =
+  let hour = Time.toHour tz time
+  in if hour <= 6 then
+       "early morning"
+     else if hour <= 12 then
+       "at noon"
+     else if hour <= 18 then
+       "evening"
+     else
+       "night"
 
 faqLink =
   a [style "font-weight" "bold",

@@ -2,7 +2,7 @@ import { Elm } from './Main.elm'
 
 let app = Elm.Main.init({
   node: document.querySelector('main'),
-  flags: { debug: false },
+  flags: {},
 })
 
 if ('geolocation' in navigator) {
@@ -10,7 +10,7 @@ if ('geolocation' in navigator) {
     app.ports.updateLocation.send({
       longitude: position.coords.longitude,
       latitude: position.coords.latitude,
-      timestamp: position.timestamp
+      timestamp: position.timestamp,
     })
   })
 }
