@@ -1,6 +1,8 @@
 port module Main exposing (..)
 
-import Browser
+import Browser exposing (..)
+import Browser.Navigation as Nav
+import Url exposing (Url)
 import Html exposing (Html, p, text, div, a, span, h1, table, tr, td, th)
 import Html.Attributes exposing (style, href)
 import Task
@@ -19,11 +21,13 @@ apiInvokeUrl =
 
 port updateLocation : (Json.Value -> msg) -> Sub msg
 
-main = Browser.element {
+main = Browser.application {
     init = init,
     update = update,
     subscriptions = subscriptions,
-    view = view
+    view = view,
+    onUrlRequest = OnUrlRequest,
+    onUrlChange = OnUrlChange
   }
 
 type alias Geolocation = {
@@ -33,14 +37,16 @@ type alias Geolocation = {
     }
 
 type alias Model = {
+  navKey : Nav.Key,
+  page : Page,
   location : Maybe (Result Http.Error Geolocation),
   prediction : Maybe (Result Http.Error PredictionData),
-  debug : Bool,
   randomAmount : Float
   }
 
+type Page = Home | Debug | Faq | NotFound
+
 type alias Flags = {
-  debug : Bool
   }
 
 type alias PredictionData = {
@@ -59,16 +65,18 @@ type Msg =
     UpdateLocation Json.Value
   | UpdateSnow (Result Http.Error PredictionData)
   | UpdateRandom Float
+  | OnUrlRequest UrlRequest
+  | OnUrlChange Url
 
-initState flags = {
+init : Flags -> Url -> Nav.Key -> (Model, Cmd Msg)
+init flags url navKey = ({
+  navKey = navKey,
+  page = urlToPage url,
   location = Nothing,
   prediction = Nothing,
-  debug = flags.debug,
   randomAmount = 0
-  }
-
-init : Flags -> (Model, Cmd Msg)
-init flags = (initState flags, Random.generate UpdateRandom (Random.float 0 1))
+  },
+  Random.generate UpdateRandom (Random.float 0 1))
 
 subscriptions : Model -> Sub Msg
 subscriptions _ = updateLocation UpdateLocation
@@ -81,7 +89,18 @@ update msg model = case msg of
   UpdateSnow result -> ({model | prediction = Just result}, Cmd.none)
   UpdateRandom n ->
     ({model | randomAmount = 2.718^(n*4)/inchesPerMeter}, Cmd.none)
-     
+  OnUrlRequest urlRequest ->
+    case urlRequest of
+      Internal url -> (model, Nav.pushUrl model.navKey (Url.toString url))
+      External url -> (model, Nav.load url)
+  OnUrlChange url -> ({ model | page = urlToPage url}, Cmd.none)
+
+urlToPage : Url -> Page
+urlToPage url = case url.path of
+  "/" -> Home
+  "/debug" -> Debug
+  "/faq" -> Faq
+  otherwise -> NotFound
 
 getSnow : Geolocation -> Cmd Msg
 getSnow loc = Http.get {
@@ -161,13 +180,19 @@ isCurrentlySnowing data =
 -- View --
 ----------
 
-view : Model -> Html Msg
-view model =
-  if model.debug
-  then debugView model
-  else normalView model
+view : Model -> Browser.Document Msg
+view model = {
+  title = "How Much Snow Am I Going To Get?",
+  body = [
+    case model.page of
+      Home -> homeView model
+      Debug -> debugView model
+      Faq -> faqView model
+      NotFound -> errorMessage [text "Page not found"]
+    ]
+  }
 
-normalView model = div [style "font-weight" "bold",
+homeView model = div [style "font-weight" "bold",
                         style "font-family" "Helvetica, sans-serif",
                         style "text-decoration" "none",
                         style "color" "black"] [
@@ -259,7 +284,7 @@ faqLink =
   a [style "font-weight" "bold",
      style "color" "grey",
      style "text-decoration" "none",
-     href "faq.html"]
+     href "/faq"]
     [text "More Information"]
 
 roundTo : Int -> Float -> Float
@@ -324,3 +349,71 @@ tableRow (prediction, influence, timeLeft) =
 
 show : Model -> Html Msg
 show model = div [] [ text (Debug.toString model) ]
+
+----------------
+-- FAQ view --
+----------------
+
+faqView model = div [
+    style "text-align" "left",
+    style "padding-left" "15vw",
+    style "padding-right" "15vw",
+    style "padding-bottom" "10vh",
+    style "padding-top" "10vh"
+  ] [
+  qna [text "Who made this site?"]
+      [text "As with most software projects, this was a group effort. ",
+       link "http://github.com/mmachenry/" "Mike MacHenry",
+       text " contributed the consonants and ",
+       link "https://github.com/presleyp/" "Presley Pizzo",
+       text " was responsible for the vowels. All punctuation and spacing was generously donated by ",
+       link "https://xkcd.com/" "Randall Munroe", text "."],
+  qna [text "Where do these forecasts come from?"]
+      [text "The US National Weather Service's ",
+       link "http://www.spc.noaa.gov/exper/sref/srefplumes/?PRM=Total-SNO" "Short-Range Ensemble Forecast",
+       text " model."],
+  qna [text "What does the number represent?"]
+      [text "An estimate of much snow you're going to get over the next few days."],
+  qna [text "Starting when? What if it's already snowing?"]
+      [text "Starting now, the moment you refresh the page. The number only includes future snowfall, not snow already on the ground."],
+  qna [text "Why don't you include the snow that's already on the ground?"]
+      [text "We don't know how much snow is on the ground."],
+  qna [text "Why not?"]
+      [text "It's complicated. In some ways, the future is easier to consistently measure than the past."],
+  qna [text "What?"]
+      [text "Never mind."],
+  qna [text "What if you got my location wrong?"]
+      [text "Sorry :("],
+  rws "What if I want to see the forecast for a different location?"
+      "https://www.weather.gov/",
+  rws "What if I live outside the US?"
+      "https://www.wunderground.com/",
+  rws "How can I find out when the snow is supposed to start?"
+      "http://www.spc.noaa.gov/exper/sref/srefplumes/",
+  rws "What if I want to see the forecast for a specific day?"
+      "https://weather.us/",
+  rws "What if I want to know how much rain or ice I'm going to get?"
+      "http://www.wpc.ncep.noaa.gov/wwd/winter_wx.shtml",
+  qna [text "What if I want to know how many people are in space right now?"]
+      [text "Use ", link "http://www.howmanypeopleareinspacerightnow.com" "How Many People Are In Space Right Now?", text "."],
+  qna [text "Is it Christmas?"]
+      [text "No. (99.73% accurate)"],
+  div [style "position" "fixed",
+       style "right" "15px",
+       style "bottom" "15px"]
+      [a [style "font-weight" "bold",
+          style "color" "grey",
+          style "text-decoration" "none",
+          href "/"]
+         [text "How Much Snow Am I Going To Get?"]]
+  ]
+
+qna q a = div [] [
+  p [style "font-weight" "bold"] (text "Q. " :: q),
+  p [] (text "A. " :: a)
+  ]
+
+rws q l = qna [text q]
+      [text "A. Use a ", link l "real weather site", text "."]
+
+link l t = a [href l, style "text-decoration" "underline", style "color" "black"] [text t]
