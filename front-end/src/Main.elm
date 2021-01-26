@@ -285,7 +285,7 @@ footerLocation model =
                 a [href ("https://www.google.com/maps?q="
                         ++ String.fromFloat loc.latitude ++ ","
                         ++ String.fromFloat loc.longitude)]
-                  [text <| lat ++ "°N " ++ lon ++ "°W"],
+                  [text <| lat ++ "\u{00B0}N " ++ lon ++ "\u{00B0}W"],
                 text " | "])
 
 windowClosing : Model -> String
