@@ -285,7 +285,7 @@ footerLocation model =
                 a [href ("https://www.google.com/maps?q="
                         ++ String.fromFloat loc.latitude ++ ","
                         ++ String.fromFloat loc.longitude)]
-                  [text <| lat ++ "°N " ++ lon ++ "°W"],
+                  [text <| lat ++ "N " ++ lon ++ "W"],
                 text " | "])
 
 windowClosing : Model -> String
@@ -463,6 +463,6 @@ qna q a = div [] [
   ]
 
 rws q l = qna [text q]
-      [text "A. Use a ", link l "real weather site", text "."]
+      [text "Use a ", link l "real weather site", text "."]
 
 link l t = a [href l, style "text-decoration" "underline", style "color" "black"] [text t]
