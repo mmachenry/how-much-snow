@@ -10,7 +10,7 @@ if ('geolocation' in navigator) {
     app.ports.updateLocation.send({
       longitude: position.coords.longitude,
       latitude: position.coords.latitude,
-      timestamp: position.timestamp,
+      timestamp: Date.now(),
     })
   })
 }
