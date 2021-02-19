@@ -179,8 +179,7 @@ isCurrentlySnowing : List (PredictionDatum, Float, Float) -> Bool
 isCurrentlySnowing data =
   List.any
     (\(p, _, timeLeft)->
-         p.metersofsnow > 0.01
-      && timeLeft > 0
+         p.metersofsnow > 0.005
       && timeLeft < 1)
     data
 
