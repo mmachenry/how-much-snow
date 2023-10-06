@@ -3,13 +3,19 @@ import simplejson as json
 import datetime
 import config
 
+# copied from config.py
+DB_HOST = 'how-much-snow-db.cddoqpefvprn.us-east-1.rds.amazonaws.com'
+DB = 'postgresql://howmuchsnow:howmuchsnow@' + DB_HOST + '/howmuchsnow'
+
 engine = sa.create_engine(config.DB)
 conn = engine.connect()
 
-def lambda_handler(event, context):
+def handler(event, context):
     lat = event['queryStringParameters']['lat']
     lon = event['queryStringParameters']['lon']
     user_object = {'data' : get_nearby_predictions((lat, lon), conn)}
+
+    print(event, context, user_object)
 
     return {
         'statusCode': 200,
